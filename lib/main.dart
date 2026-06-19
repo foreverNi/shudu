@@ -7,7 +7,7 @@ void main() {
   runApp(const SudokuApp());
 }
 
-const String appVersion = '1.0.0+1';
+const String appVersion = '1.0.1+2';
 const String appAuthor = 'Noah.Ni';
 
 enum SudokuDifficulty {
@@ -797,11 +797,18 @@ class _SudokuPageState extends State<SudokuPage> {
             final boardSize = math
                 .min(availableWidth, availableHeight * 0.52)
                 .clamp(292.0, 420.0);
+            const fixedControlHeight = 210.0;
+            final estimatedContentHeight = boardSize + fixedControlHeight;
+            final topOffset =
+                ((availableHeight - estimatedContentHeight) * 0.22).clamp(
+                  0.0,
+                  58.0,
+                );
 
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 horizontalPadding,
-                6,
+                6 + topOffset,
                 horizontalPadding,
                 14,
               ),
