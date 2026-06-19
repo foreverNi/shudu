@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const SudokuApp());
 }
+
+const String appVersion = '1.0.0+1';
+const String appAuthor = 'Noah.Ni';
 
 enum SudokuDifficulty {
   easy('简单', '适合练习'),
@@ -42,12 +46,98 @@ class BoardSnapshot {
     required this.cells,
     required this.mistakes,
     required this.selectedIndex,
+    required this.solved,
   });
 
   final List<SudokuCell> cells;
   final int mistakes;
   final int selectedIndex;
+  final bool solved;
 }
+
+const List<int> _solution = [
+  5,
+  3,
+  4,
+  6,
+  7,
+  8,
+  9,
+  1,
+  2,
+  6,
+  7,
+  2,
+  1,
+  9,
+  5,
+  3,
+  4,
+  8,
+  1,
+  9,
+  8,
+  3,
+  4,
+  2,
+  5,
+  6,
+  7,
+  8,
+  5,
+  9,
+  7,
+  6,
+  1,
+  4,
+  2,
+  3,
+  4,
+  2,
+  6,
+  8,
+  5,
+  3,
+  7,
+  9,
+  1,
+  7,
+  1,
+  3,
+  9,
+  2,
+  4,
+  8,
+  5,
+  6,
+  9,
+  6,
+  1,
+  5,
+  3,
+  7,
+  2,
+  8,
+  4,
+  2,
+  8,
+  7,
+  4,
+  1,
+  9,
+  6,
+  3,
+  5,
+  3,
+  4,
+  5,
+  2,
+  8,
+  6,
+  1,
+  7,
+  9,
+];
 
 const Map<SudokuDifficulty, SudokuPuzzle> puzzles = {
   SudokuDifficulty.easy: SudokuPuzzle(
@@ -134,89 +224,7 @@ const Map<SudokuDifficulty, SudokuPuzzle> puzzles = {
       7,
       9,
     ],
-    solution: [
-      5,
-      3,
-      4,
-      6,
-      7,
-      8,
-      9,
-      1,
-      2,
-      6,
-      7,
-      2,
-      1,
-      9,
-      5,
-      3,
-      4,
-      8,
-      1,
-      9,
-      8,
-      3,
-      4,
-      2,
-      5,
-      6,
-      7,
-      8,
-      5,
-      9,
-      7,
-      6,
-      1,
-      4,
-      2,
-      3,
-      4,
-      2,
-      6,
-      8,
-      5,
-      3,
-      7,
-      9,
-      1,
-      7,
-      1,
-      3,
-      9,
-      2,
-      4,
-      8,
-      5,
-      6,
-      9,
-      6,
-      1,
-      5,
-      3,
-      7,
-      2,
-      8,
-      4,
-      2,
-      8,
-      7,
-      4,
-      1,
-      9,
-      6,
-      3,
-      5,
-      3,
-      4,
-      5,
-      2,
-      8,
-      6,
-      1,
-      7,
-      9,
-    ],
+    solution: _solution,
   ),
   SudokuDifficulty.medium: SudokuPuzzle(
     givens: [
@@ -302,89 +310,7 @@ const Map<SudokuDifficulty, SudokuPuzzle> puzzles = {
       7,
       9,
     ],
-    solution: [
-      5,
-      3,
-      4,
-      6,
-      7,
-      8,
-      9,
-      1,
-      2,
-      6,
-      7,
-      2,
-      1,
-      9,
-      5,
-      3,
-      4,
-      8,
-      1,
-      9,
-      8,
-      3,
-      4,
-      2,
-      5,
-      6,
-      7,
-      8,
-      5,
-      9,
-      7,
-      6,
-      1,
-      4,
-      2,
-      3,
-      4,
-      2,
-      6,
-      8,
-      5,
-      3,
-      7,
-      9,
-      1,
-      7,
-      1,
-      3,
-      9,
-      2,
-      4,
-      8,
-      5,
-      6,
-      9,
-      6,
-      1,
-      5,
-      3,
-      7,
-      2,
-      8,
-      4,
-      2,
-      8,
-      7,
-      4,
-      1,
-      9,
-      6,
-      3,
-      5,
-      3,
-      4,
-      5,
-      2,
-      8,
-      6,
-      1,
-      7,
-      9,
-    ],
+    solution: _solution,
   ),
   SudokuDifficulty.hard: SudokuPuzzle(
     givens: [
@@ -470,89 +396,7 @@ const Map<SudokuDifficulty, SudokuPuzzle> puzzles = {
       0,
       0,
     ],
-    solution: [
-      5,
-      3,
-      4,
-      6,
-      7,
-      8,
-      9,
-      1,
-      2,
-      6,
-      7,
-      2,
-      1,
-      9,
-      5,
-      3,
-      4,
-      8,
-      1,
-      9,
-      8,
-      3,
-      4,
-      2,
-      5,
-      6,
-      7,
-      8,
-      5,
-      9,
-      7,
-      6,
-      1,
-      4,
-      2,
-      3,
-      4,
-      2,
-      6,
-      8,
-      5,
-      3,
-      7,
-      9,
-      1,
-      7,
-      1,
-      3,
-      9,
-      2,
-      4,
-      8,
-      5,
-      6,
-      9,
-      6,
-      1,
-      5,
-      3,
-      7,
-      2,
-      8,
-      4,
-      2,
-      8,
-      7,
-      4,
-      1,
-      9,
-      6,
-      3,
-      5,
-      3,
-      4,
-      5,
-      2,
-      8,
-      6,
-      1,
-      7,
-      9,
-    ],
+    solution: _solution,
   ),
 };
 
@@ -597,13 +441,14 @@ class _SudokuPageState extends State<SudokuPage> {
 
   SudokuDifficulty _difficulty = SudokuDifficulty.medium;
   late List<SudokuCell> _cells;
-  late List<int> _solution;
+  late List<int> _solutionValues;
   final List<BoardSnapshot> _history = [];
   int _selectedIndex = 40;
   int _mistakes = 0;
   int _seconds = 0;
   bool _noteMode = false;
   bool _paused = false;
+  bool _solved = false;
   Timer? _timer;
 
   @override
@@ -611,7 +456,7 @@ class _SudokuPageState extends State<SudokuPage> {
     super.initState();
     _loadPuzzle(_difficulty);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!_paused && mounted) {
+      if (!_paused && !_solved && mounted) {
         setState(() => _seconds++);
       }
     });
@@ -626,7 +471,7 @@ class _SudokuPageState extends State<SudokuPage> {
   void _loadPuzzle(SudokuDifficulty difficulty) {
     final puzzle = puzzles[difficulty]!;
     _difficulty = difficulty;
-    _solution = puzzle.solution;
+    _solutionValues = puzzle.solution;
     _cells = [
       for (final value in puzzle.givens)
         SudokuCell(value: value, fixed: value != 0),
@@ -640,6 +485,7 @@ class _SudokuPageState extends State<SudokuPage> {
     _history.clear();
     _noteMode = false;
     _paused = false;
+    _solved = false;
   }
 
   void _saveHistory() {
@@ -648,6 +494,7 @@ class _SudokuPageState extends State<SudokuPage> {
         cells: _cells.map((cell) => cell.copy()).toList(),
         mistakes: _mistakes,
         selectedIndex: _selectedIndex,
+        solved: _solved,
       ),
     );
     if (_history.length > 80) {
@@ -661,7 +508,7 @@ class _SudokuPageState extends State<SudokuPage> {
 
   void _handleNumber(int number) {
     final cell = _cells[_selectedIndex];
-    if (cell.fixed) {
+    if (cell.fixed || _solved) {
       return;
     }
     _saveHistory();
@@ -676,15 +523,18 @@ class _SudokuPageState extends State<SudokuPage> {
       }
       cell.notes.clear();
       cell.value = number;
-      if (_solution[_selectedIndex] != number) {
+      if (_solutionValues[_selectedIndex] != number) {
         _mistakes = (_mistakes + 1).clamp(0, 3);
       }
     });
+    if (!_noteMode) {
+      _maybeShowCompletionDialog();
+    }
   }
 
   void _eraseSelected() {
     final cell = _cells[_selectedIndex];
-    if (cell.fixed) {
+    if (cell.fixed || _solved) {
       return;
     }
     _saveHistory();
@@ -703,18 +553,66 @@ class _SudokuPageState extends State<SudokuPage> {
       _cells = snapshot.cells.map((cell) => cell.copy()).toList();
       _mistakes = snapshot.mistakes;
       _selectedIndex = snapshot.selectedIndex;
+      _solved = snapshot.solved;
     });
   }
 
   void _hint() {
     final cell = _cells[_selectedIndex];
-    if (cell.fixed) {
+    if (cell.fixed || _solved) {
       return;
     }
     _saveHistory();
     setState(() {
-      cell.value = _solution[_selectedIndex];
+      cell.value = _solutionValues[_selectedIndex];
       cell.notes.clear();
+    });
+    _maybeShowCompletionDialog();
+  }
+
+  bool get _isSolved {
+    for (var index = 0; index < _cells.length; index++) {
+      if (_cells[index].value != _solutionValues[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _maybeShowCompletionDialog() {
+    if (_solved || !_isSolved) {
+      return;
+    }
+    setState(() => _solved = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('恭喜完成'),
+            content: Text(
+              '你已正确完成${_difficulty.label}数独。\n用时 $_timeLabel，错误 $_mistakes/3。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('继续查看'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _showDifficultySheet();
+                },
+                child: const Text('再来一局'),
+              ),
+            ],
+          );
+        },
+      );
     });
   }
 
@@ -853,6 +751,34 @@ class _SudokuPageState extends State<SudokuPage> {
     );
   }
 
+  void _showAboutDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('关于'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('数独'),
+              SizedBox(height: 10),
+              Text('版本号：$appVersion'),
+              SizedBox(height: 6),
+              Text('作者：$appAuthor'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('关闭'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String get _timeLabel {
     final minutes = (_seconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (_seconds % 60).toString().padLeft(2, '0');
@@ -865,49 +791,59 @@ class _SudokuPageState extends State<SudokuPage> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final boardSize = (constraints.maxWidth - 32).clamp(300.0, 420.0);
+            final horizontalPadding = constraints.maxWidth < 360 ? 12.0 : 16.0;
+            final availableWidth = constraints.maxWidth - horizontalPadding * 2;
+            final availableHeight = constraints.maxHeight - 20;
+            final boardSize = math
+                .min(availableWidth, availableHeight * 0.52)
+                .clamp(292.0, 420.0);
+
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _TopBar(
-                      difficultyLabel: _difficulty.label,
-                      timeLabel: _timeLabel,
-                      mistakesLabel: '错误 $_mistakes/3',
-                      paused: _paused,
-                      onNewGame: _showDifficultySheet,
-                      onPause: () => setState(() => _paused = !_paused),
-                    ),
-                    const SizedBox(height: 18),
-                    Center(
-                      child: SizedBox.square(
-                        dimension: boardSize,
-                        child: _SudokuBoard(
-                          cells: _cells,
-                          selectedIndex: _selectedIndex,
-                          isRelated: _isRelated,
-                          isCompletedRow: _isCompletedRow,
-                          isCompletedColumn: _isCompletedColumn,
-                          isCompletedBox: _isCompletedBox,
-                          onCellTap: _selectCell,
-                        ),
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                6,
+                horizontalPadding,
+                14,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _TopBar(
+                    difficultyLabel: _difficulty.label,
+                    timeLabel: _timeLabel,
+                    mistakesLabel: '错误 $_mistakes/3',
+                    solved: _solved,
+                    paused: _paused,
+                    onNewGame: _showDifficultySheet,
+                    onAbout: _showAboutDialog,
+                    onPause: () => setState(() => _paused = !_paused),
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: SizedBox.square(
+                      dimension: boardSize,
+                      child: _SudokuBoard(
+                        cells: _cells,
+                        selectedIndex: _selectedIndex,
+                        isRelated: _isRelated,
+                        isCompletedRow: _isCompletedRow,
+                        isCompletedColumn: _isCompletedColumn,
+                        isCompletedBox: _isCompletedBox,
+                        onCellTap: _selectCell,
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    _ActionToolbar(
-                      noteMode: _noteMode,
-                      onUndo: _undo,
-                      onErase: _eraseSelected,
-                      onHint: _hint,
-                      onNoteMode: () => setState(() => _noteMode = !_noteMode),
-                    ),
-                    const SizedBox(height: 14),
-                    _NumberPad(onNumber: _handleNumber),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 12),
+                  _ActionToolbar(
+                    noteMode: _noteMode,
+                    onUndo: _undo,
+                    onErase: _eraseSelected,
+                    onHint: _hint,
+                    onNoteMode: () => setState(() => _noteMode = !_noteMode),
+                  ),
+                  const SizedBox(height: 10),
+                  _NumberPad(onNumber: _handleNumber),
+                ],
               ),
             );
           },
@@ -922,16 +858,20 @@ class _TopBar extends StatelessWidget {
     required this.difficultyLabel,
     required this.timeLabel,
     required this.mistakesLabel,
+    required this.solved,
     required this.paused,
     required this.onNewGame,
+    required this.onAbout,
     required this.onPause,
   });
 
   final String difficultyLabel;
   final String timeLabel;
   final String mistakesLabel;
+  final bool solved;
   final bool paused;
   final VoidCallback onNewGame;
+  final VoidCallback onAbout;
   final VoidCallback onPause;
 
   @override
@@ -945,9 +885,15 @@ class _TopBar extends StatelessWidget {
               '数独',
               style: TextStyle(
                 color: _SudokuPageState._ink,
-                fontSize: 30,
+                fontSize: 28,
                 fontWeight: FontWeight.w800,
               ),
+            ),
+            const SizedBox(width: 10),
+            _StatusPill(
+              icon: solved ? Icons.check_circle_rounded : Icons.bolt_rounded,
+              label: solved ? '已完成' : difficultyLabel,
+              emphasized: true,
             ),
             const Spacer(),
             _RoundIconButton(
@@ -956,28 +902,46 @@ class _TopBar extends StatelessWidget {
               onTap: onNewGame,
             ),
             const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              tooltip: '菜单',
+              icon: const Icon(Icons.more_horiz_rounded),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                if (value == 'about') {
+                  onAbout();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'about',
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 20),
+                      SizedBox(width: 10),
+                      Text('关于'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _StatusPill(icon: Icons.timer_rounded, label: timeLabel),
+            const SizedBox(width: 8),
+            _StatusPill(
+              icon: Icons.error_outline_rounded,
+              label: mistakesLabel,
+            ),
+            const Spacer(),
             _RoundIconButton(
               tooltip: paused ? '继续' : '暂停',
               icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
               onTap: onPause,
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _StatusPill(
-              icon: Icons.bolt_rounded,
-              label: difficultyLabel,
-              emphasized: true,
-            ),
-            _StatusPill(icon: Icons.timer_rounded, label: timeLabel),
-            _StatusPill(
-              icon: Icons.error_outline_rounded,
-              label: mistakesLabel,
             ),
           ],
         ),
@@ -1014,9 +978,9 @@ class _SudokuBoard extends StatelessWidget {
         border: Border.all(color: const Color(0xFF566070), width: 2),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            color: Color(0x10000000),
+            blurRadius: 14,
+            offset: Offset(0, 7),
           ),
         ],
       ),
@@ -1162,13 +1126,13 @@ class _ActionToolbar extends StatelessWidget {
     return Row(
       children: [
         _ToolButton(icon: Icons.undo_rounded, label: '撤销', onTap: onUndo),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         _ToolButton(
           icon: Icons.backspace_outlined,
           label: '清除',
           onTap: onErase,
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         _ToolButton(icon: Icons.lightbulb_outline, label: '提示', onTap: onHint),
         const Spacer(),
         _NoteToggle(active: noteMode, onTap: onNoteMode),
@@ -1188,9 +1152,9 @@ class _NumberPad extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 9,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 0.82,
+      mainAxisSpacing: 6,
+      crossAxisSpacing: 6,
+      childAspectRatio: 0.95,
       children: [
         for (var number = 1; number <= 9; number++)
           _NumberButton(number: number, onTap: () => onNumber(number)),
@@ -1370,8 +1334,8 @@ class _RoundIconButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: SizedBox(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             child: Icon(icon, color: _SudokuPageState._ink, size: 22),
           ),
         ),
@@ -1402,13 +1366,13 @@ class _ToolButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFE5E9F0)),
             ),
-            child: Icon(icon, color: const Color(0xFF526071), size: 22),
+            child: Icon(icon, color: const Color(0xFF526071), size: 21),
           ),
         ),
       ),
@@ -1431,8 +1395,8 @@ class _NoteToggle extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          height: 46,
-          padding: const EdgeInsets.symmetric(horizontal: 13),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -1446,10 +1410,10 @@ class _NoteToggle extends StatelessWidget {
             children: [
               Icon(
                 Icons.edit_note_rounded,
-                size: 21,
+                size: 20,
                 color: active ? Colors.white : const Color(0xFF526071),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 '候选',
                 style: TextStyle(
@@ -1477,7 +1441,6 @@ class _NumberButton extends StatelessWidget {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12),
-      elevation: 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
@@ -1487,9 +1450,9 @@ class _NumberButton extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE1E7EF)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x08000000),
-                blurRadius: 8,
-                offset: Offset(0, 4),
+                color: Color(0x06000000),
+                blurRadius: 7,
+                offset: Offset(0, 3),
               ),
             ],
           ),

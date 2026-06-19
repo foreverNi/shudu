@@ -10,16 +10,26 @@ Future<void> pumpSudoku(WidgetTester tester) async {
   await tester.pumpWidget(const SudokuApp());
 }
 
+Future<void> startEasyGame(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.add_rounded));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('简单'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('开始游戏'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('shows the confirmed Sudoku game shell', (tester) async {
+  testWidgets('shows the optimized Sudoku game shell', (tester) async {
     await pumpSudoku(tester);
 
     expect(find.text('数独'), findsOneWidget);
     expect(find.text('中等'), findsOneWidget);
     expect(find.text('错误 0/3'), findsOneWidget);
     expect(find.text('候选'), findsOneWidget);
+    expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
     expect(find.text('选择难度'), findsNothing);
-    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('opens difficulty sheet and starts a hard game', (tester) async {
@@ -63,5 +73,44 @@ void main() {
         .widgetList<Text>(find.text('4'))
         .where((widget) => widget.style?.fontSize == 9);
     expect(noteFourWidgets, isEmpty);
+  });
+
+  testWidgets('shows completion feedback when the puzzle is solved', (
+    tester,
+  ) async {
+    await pumpSudoku(tester);
+    await startEasyGame(tester);
+
+    await tester.tap(find.byKey(const ValueKey('cell-5')));
+    await tester.pump();
+    await tester.tap(find.text('8').last);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('cell-11')));
+    await tester.pump();
+    await tester.tap(find.text('2').last);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('cell-40')));
+    await tester.pump();
+    await tester.tap(find.text('5').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('恭喜完成'), findsOneWidget);
+    expect(find.text('已完成'), findsOneWidget);
+    expect(find.text('再来一局'), findsOneWidget);
+  });
+
+  testWidgets('shows about dialog with version and author', (tester) async {
+    await pumpSudoku(tester);
+
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('关于'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('关于'), findsOneWidget);
+    expect(find.text('版本号：$appVersion'), findsOneWidget);
+    expect(find.text('作者：Noah.Ni'), findsOneWidget);
   });
 }
