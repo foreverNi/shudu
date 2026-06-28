@@ -1035,11 +1035,35 @@ class _SudokuPageState extends State<SudokuPage> {
     return CupertinoPageScaffold(
       backgroundColor: _iosBackground,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('数独'),
-        trailing: CupertinoButton(
+        leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: _showAboutDialog,
-          child: const Icon(CupertinoIcons.ellipsis_circle),
+          onPressed: _showDifficultySheet,
+          child: const Text(
+            '新游戏',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        middle: const Text('数独'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              onPressed: () => setState(() => _paused = !_paused),
+              child: Text(
+                _paused ? '继续' : '暂停',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            CupertinoButton(
+              padding: const EdgeInsets.only(left: 8),
+              onPressed: _showAboutDialog,
+              child: const Text(
+                '更多',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
       ),
       child: SafeArea(
@@ -1048,8 +1072,8 @@ class _SudokuPageState extends State<SudokuPage> {
             final horizontalPadding = constraints.maxWidth < 360 ? 12.0 : 18.0;
             final availableWidth = constraints.maxWidth - horizontalPadding * 2;
             final boardSize = math
-                .min(availableWidth, constraints.maxHeight * 0.39)
-                .clamp(292.0, 360.0);
+                .min(availableWidth - 16, constraints.maxHeight * 0.44)
+                .clamp(292.0, 384.0);
 
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
@@ -1067,10 +1091,9 @@ class _SudokuPageState extends State<SudokuPage> {
                     mistakesLabel: '错误 $_mistakes/3',
                     solved: _solved,
                     paused: _paused,
-                    onNewGame: _showDifficultySheet,
                     onPause: () => setState(() => _paused = !_paused),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
                   Center(
                     child: SizedBox.square(
                       dimension: boardSize,
@@ -1095,7 +1118,12 @@ class _SudokuPageState extends State<SudokuPage> {
                     onNoteMode: () => setState(() => _noteMode = !_noteMode),
                   ),
                   const SizedBox(height: 12),
-                  _IosNumberPad(onNumber: _handleNumber),
+                  _IosNumberPad(
+                    selectedNumber: _cells[_selectedIndex].value == 0
+                        ? null
+                        : _cells[_selectedIndex].value,
+                    onNumber: _handleNumber,
+                  ),
                 ],
               ),
             );
@@ -1113,7 +1141,6 @@ class _IosStatusHeader extends StatelessWidget {
     required this.mistakesLabel,
     required this.solved,
     required this.paused,
-    required this.onNewGame,
     required this.onPause,
   });
 
@@ -1122,7 +1149,6 @@ class _IosStatusHeader extends StatelessWidget {
   final String mistakesLabel;
   final bool solved;
   final bool paused;
-  final VoidCallback onNewGame;
   final VoidCallback onPause;
 
   @override
@@ -1130,57 +1156,33 @@ class _IosStatusHeader extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground.resolveFrom(context),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-        child: Column(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    solved ? '已完成' : difficultyLabel,
-                    style: const TextStyle(
-                      color: CupertinoColors.label,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+            Expanded(
+              child: Text(
+                solved ? '已完成' : difficultyLabel,
+                style: const TextStyle(
+                  color: CupertinoColors.label,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w800,
                 ),
-                CupertinoButton(
-                  minimumSize: const Size(34, 34),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  onPressed: onNewGame,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(CupertinoIcons.add_circled, size: 20),
-                      SizedBox(width: 4),
-                      Text('新游戏'),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _IosMetric(icon: CupertinoIcons.timer, label: timeLabel),
-                const SizedBox(width: 8),
-                _IosMetric(
-                  icon: CupertinoIcons.exclamationmark_circle,
-                  label: mistakesLabel,
-                ),
-                const Spacer(),
-                _IosIconButton(
-                  label: paused ? '继续' : '暂停',
-                  icon: paused
-                      ? CupertinoIcons.play_fill
-                      : CupertinoIcons.pause_fill,
-                  onTap: onPause,
-                ),
-              ],
+            _IosMetric(labelPrefix: '时间', label: timeLabel),
+            const SizedBox(width: 7),
+            _IosMetric(
+              labelPrefix: '错误',
+              label: mistakesLabel.replaceFirst('错误 ', ''),
+            ),
+            const SizedBox(width: 7),
+            _IosStatusButton(
+              label: paused ? '继续' : '进行中',
+              emphasized: paused,
+              onTap: onPause,
             ),
           ],
         ),
@@ -1190,15 +1192,15 @@ class _IosStatusHeader extends StatelessWidget {
 }
 
 class _IosMetric extends StatelessWidget {
-  const _IosMetric({required this.icon, required this.label});
+  const _IosMetric({required this.labelPrefix, required this.label});
 
-  final IconData icon;
+  final String labelPrefix;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
       decoration: BoxDecoration(
         color: CupertinoColors.secondarySystemBackground.resolveFrom(context),
         borderRadius: BorderRadius.circular(999),
@@ -1206,17 +1208,54 @@ class _IosMetric extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: CupertinoColors.secondaryLabel),
+          Text(
+            labelPrefix,
+            style: const TextStyle(
+              color: CupertinoColors.secondaryLabel,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
-              color: CupertinoColors.secondaryLabel,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+              color: Color(0xFF7C8595),
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _IosStatusButton extends StatelessWidget {
+  const _IosStatusButton({
+    required this.label,
+    required this.emphasized,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool emphasized;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      minimumSize: const Size(66, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      color: emphasized ? _SudokuPageState._iosBlue : null,
+      borderRadius: BorderRadius.circular(14),
+      onPressed: onTap,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: emphasized ? CupertinoColors.white : _SudokuPageState._iosBlue,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -1267,18 +1306,21 @@ class _IosActionToolbar extends StatelessWidget {
             ),
             const Spacer(),
             CupertinoButton(
-              minimumSize: const Size(40, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              color: noteMode ? _SudokuPageState._iosBlue : null,
-              borderRadius: BorderRadius.circular(11),
+              minimumSize: const Size(84, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              color: noteMode
+                  ? _SudokuPageState._iosBlue.withValues(alpha: 0.14)
+                  : CupertinoColors.secondarySystemBackground.resolveFrom(
+                      context,
+                    ),
+              borderRadius: BorderRadius.circular(16),
               onPressed: onNoteMode,
               child: Text(
                 '候选',
                 style: TextStyle(
-                  color: noteMode
-                      ? CupertinoColors.white
-                      : _SudokuPageState._iosBlue,
-                  fontWeight: FontWeight.w700,
+                  color: _SudokuPageState._iosBlue,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -1305,20 +1347,35 @@ class _IosIconButton extends StatelessWidget {
     return Tooltip(
       message: label,
       child: CupertinoButton(
-        minimumSize: const Size(40, 40),
+        minimumSize: const Size(48, 48),
         padding: EdgeInsets.zero,
         color: CupertinoColors.secondarySystemBackground.resolveFrom(context),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(14),
         onPressed: onTap,
-        child: Icon(icon, size: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                color: CupertinoColors.secondaryLabel,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _IosNumberPad extends StatelessWidget {
-  const _IosNumberPad({required this.onNumber});
+  const _IosNumberPad({required this.selectedNumber, required this.onNumber});
 
+  final int? selectedNumber;
   final ValueChanged<int> onNumber;
 
   @override
@@ -1332,29 +1389,40 @@ class _IosNumberPad extends StatelessWidget {
       childAspectRatio: 2.35,
       children: [
         for (var number = 1; number <= 9; number++)
-          _IosNumberButton(number: number, onTap: () => onNumber(number)),
+          _IosNumberButton(
+            number: number,
+            selected: selectedNumber == number,
+            onTap: () => onNumber(number),
+          ),
       ],
     );
   }
 }
 
 class _IosNumberButton extends StatelessWidget {
-  const _IosNumberButton({required this.number, required this.onTap});
+  const _IosNumberButton({
+    required this.number,
+    required this.selected,
+    required this.onTap,
+  });
 
   final int number;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      color: CupertinoColors.systemBackground.resolveFrom(context),
+      color: selected
+          ? _SudokuPageState._iosBlue
+          : CupertinoColors.systemBackground.resolveFrom(context),
       borderRadius: BorderRadius.circular(14),
       onPressed: onTap,
       child: Text(
         '$number',
-        style: const TextStyle(
-          color: _SudokuPageState._iosBlue,
+        style: TextStyle(
+          color: selected ? CupertinoColors.white : _SudokuPageState._iosBlue,
           fontSize: 25,
           fontWeight: FontWeight.w700,
         ),

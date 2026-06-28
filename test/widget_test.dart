@@ -125,7 +125,10 @@ void main() {
 
     expect(find.text('数独'), findsOneWidget);
     expect(find.text('中等'), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.ellipsis_circle), findsOneWidget);
+    expect(find.text('新游戏'), findsOneWidget);
+    expect(find.text('暂停'), findsOneWidget);
+    expect(find.text('更多'), findsOneWidget);
+    expect(find.text('时间'), findsOneWidget);
     expect(find.byIcon(Icons.more_horiz_rounded), findsNothing);
 
     await tester.tap(find.text('新游戏'));
@@ -145,7 +148,7 @@ void main() {
     expect(find.text('困难'), findsOneWidget);
     expect(find.text('选择难度'), findsNothing);
 
-    await tester.tap(find.byIcon(CupertinoIcons.ellipsis_circle));
+    await tester.tap(find.text('更多'));
     await tester.pumpAndSettle();
 
     expect(find.text('版本号：$appVersion'), findsOneWidget);
