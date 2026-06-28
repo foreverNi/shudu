@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -405,6 +407,24 @@ class SudokuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return const CupertinoApp(
+        debugShowCheckedModeBanner: false,
+        title: '数独',
+        theme: CupertinoThemeData(
+          brightness: Brightness.light,
+          primaryColor: CupertinoColors.systemBlue,
+          scaffoldBackgroundColor: Color(0xFFF2F2F7),
+          textTheme: CupertinoTextThemeData(
+            textStyle: TextStyle(
+              color: CupertinoColors.label,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ),
+        home: SudokuPage(),
+      );
+    }
     const accent = Color(0xFF2F6BFF);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -433,6 +453,9 @@ class SudokuPage extends StatefulWidget {
 
 class _SudokuPageState extends State<SudokuPage> {
   static const _accent = Color(0xFF2F6BFF);
+  static const _iosBlue = CupertinoColors.systemBlue;
+  static const _iosBackground = Color(0xFFF2F2F7);
+  static const _iosSeparator = Color(0xFFD1D1D6);
   static const _success = Color(0xFFE6F5EC);
   static const _relation = Color(0xFFEFF5FF);
   static const _selected = Color(0xFFDDE8FF);
@@ -450,6 +473,8 @@ class _SudokuPageState extends State<SudokuPage> {
   bool _paused = false;
   bool _solved = false;
   Timer? _timer;
+
+  bool get _isIosStyle => defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
@@ -588,6 +613,35 @@ class _SudokuPageState extends State<SudokuPage> {
       if (!mounted) {
         return;
       }
+      if (_isIosStyle) {
+        showCupertinoDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: const Text('恭喜完成'),
+              content: Text(
+                '你已正确完成${_difficulty.label}数独。\n用时 $_timeLabel，错误 $_mistakes/3。',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('继续查看'),
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showDifficultySheet();
+                  },
+                  child: const Text('再来一局'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
       showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -652,6 +706,100 @@ class _SudokuPageState extends State<SudokuPage> {
   }
 
   void _showDifficultySheet() {
+    if (_isIosStyle) {
+      showCupertinoModalPopup<void>(
+        context: context,
+        builder: (context) {
+          var selected = _difficulty;
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              return CupertinoPopupSurface(
+                isSurfacePainted: true,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 38,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: const Color(0x33000000),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          '选择难度',
+                          style: TextStyle(
+                            color: CupertinoColors.label,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CupertinoSlidingSegmentedControl<SudokuDifficulty>(
+                          groupValue: selected,
+                          thumbColor: CupertinoColors.white,
+                          backgroundColor: CupertinoColors.systemGrey5,
+                          children: {
+                            for (final difficulty in SudokuDifficulty.values)
+                              difficulty: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 8,
+                                ),
+                                child: Text(difficulty.label),
+                              ),
+                          },
+                          onValueChanged: (value) {
+                            if (value != null) {
+                              setSheetState(() => selected = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          selected.description,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: CupertinoColors.secondaryLabel,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        CupertinoButton.filled(
+                          borderRadius: BorderRadius.circular(12),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            setState(() => _loadPuzzle(selected));
+                          },
+                          child: const Text(
+                            '开始游戏',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CupertinoButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('取消'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+      return;
+    }
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -752,6 +900,34 @@ class _SudokuPageState extends State<SudokuPage> {
   }
 
   void _showAboutDialog() {
+    if (_isIosStyle) {
+      showCupertinoDialog<void>(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: const Text('关于'),
+            content: const Column(
+              children: [
+                SizedBox(height: 8),
+                Text('数独'),
+                SizedBox(height: 8),
+                Text('版本号：$appVersion'),
+                SizedBox(height: 4),
+                Text('作者：$appAuthor'),
+              ],
+            ),
+            actions: [
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('关闭'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
     showDialog<void>(
       context: context,
       builder: (context) {
@@ -787,6 +963,9 @@ class _SudokuPageState extends State<SudokuPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isIosStyle) {
+      return _buildIosLayout(context);
+    }
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -847,6 +1026,337 @@ class _SudokuPageState extends State<SudokuPage> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIosLayout(BuildContext context) {
+    return CupertinoPageScaffold(
+      backgroundColor: _iosBackground,
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('数独'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _showAboutDialog,
+          child: const Icon(CupertinoIcons.ellipsis_circle),
+        ),
+      ),
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontalPadding = constraints.maxWidth < 360 ? 12.0 : 18.0;
+            final availableWidth = constraints.maxWidth - horizontalPadding * 2;
+            final boardSize = math
+                .min(availableWidth, constraints.maxHeight * 0.39)
+                .clamp(292.0, 360.0);
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                10,
+                horizontalPadding,
+                18,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _IosStatusHeader(
+                    difficultyLabel: _difficulty.label,
+                    timeLabel: _timeLabel,
+                    mistakesLabel: '错误 $_mistakes/3',
+                    solved: _solved,
+                    paused: _paused,
+                    onNewGame: _showDifficultySheet,
+                    onPause: () => setState(() => _paused = !_paused),
+                  ),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: SizedBox.square(
+                      dimension: boardSize,
+                      child: _SudokuBoard(
+                        cells: _cells,
+                        selectedIndex: _selectedIndex,
+                        isRelated: _isRelated,
+                        isCompletedRow: _isCompletedRow,
+                        isCompletedColumn: _isCompletedColumn,
+                        isCompletedBox: _isCompletedBox,
+                        onCellTap: _selectCell,
+                        iosStyle: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _IosActionToolbar(
+                    noteMode: _noteMode,
+                    onUndo: _undo,
+                    onErase: _eraseSelected,
+                    onHint: _hint,
+                    onNoteMode: () => setState(() => _noteMode = !_noteMode),
+                  ),
+                  const SizedBox(height: 12),
+                  _IosNumberPad(onNumber: _handleNumber),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _IosStatusHeader extends StatelessWidget {
+  const _IosStatusHeader({
+    required this.difficultyLabel,
+    required this.timeLabel,
+    required this.mistakesLabel,
+    required this.solved,
+    required this.paused,
+    required this.onNewGame,
+    required this.onPause,
+  });
+
+  final String difficultyLabel;
+  final String timeLabel;
+  final String mistakesLabel;
+  final bool solved;
+  final bool paused;
+  final VoidCallback onNewGame;
+  final VoidCallback onPause;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    solved ? '已完成' : difficultyLabel,
+                    style: const TextStyle(
+                      color: CupertinoColors.label,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                CupertinoButton(
+                  minimumSize: const Size(34, 34),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  onPressed: onNewGame,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.add_circled, size: 20),
+                      SizedBox(width: 4),
+                      Text('新游戏'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _IosMetric(icon: CupertinoIcons.timer, label: timeLabel),
+                const SizedBox(width: 8),
+                _IosMetric(
+                  icon: CupertinoIcons.exclamationmark_circle,
+                  label: mistakesLabel,
+                ),
+                const Spacer(),
+                _IosIconButton(
+                  label: paused ? '继续' : '暂停',
+                  icon: paused
+                      ? CupertinoIcons.play_fill
+                      : CupertinoIcons.pause_fill,
+                  onTap: onPause,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IosMetric extends StatelessWidget {
+  const _IosMetric({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: CupertinoColors.secondarySystemBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: CupertinoColors.secondaryLabel),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: CupertinoColors.secondaryLabel,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IosActionToolbar extends StatelessWidget {
+  const _IosActionToolbar({
+    required this.noteMode,
+    required this.onUndo,
+    required this.onErase,
+    required this.onHint,
+    required this.onNoteMode,
+  });
+
+  final bool noteMode;
+  final VoidCallback onUndo;
+  final VoidCallback onErase;
+  final VoidCallback onHint;
+  final VoidCallback onNoteMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            _IosIconButton(
+              label: '撤销',
+              icon: CupertinoIcons.arrow_counterclockwise,
+              onTap: onUndo,
+            ),
+            const SizedBox(width: 8),
+            _IosIconButton(
+              label: '清除',
+              icon: CupertinoIcons.delete_left,
+              onTap: onErase,
+            ),
+            const SizedBox(width: 8),
+            _IosIconButton(
+              label: '提示',
+              icon: CupertinoIcons.lightbulb,
+              onTap: onHint,
+            ),
+            const Spacer(),
+            CupertinoButton(
+              minimumSize: const Size(40, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              color: noteMode ? _SudokuPageState._iosBlue : null,
+              borderRadius: BorderRadius.circular(11),
+              onPressed: onNoteMode,
+              child: Text(
+                '候选',
+                style: TextStyle(
+                  color: noteMode
+                      ? CupertinoColors.white
+                      : _SudokuPageState._iosBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IosIconButton extends StatelessWidget {
+  const _IosIconButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: CupertinoButton(
+        minimumSize: const Size(40, 40),
+        padding: EdgeInsets.zero,
+        color: CupertinoColors.secondarySystemBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(11),
+        onPressed: onTap,
+        child: Icon(icon, size: 20),
+      ),
+    );
+  }
+}
+
+class _IosNumberPad extends StatelessWidget {
+  const _IosNumberPad({required this.onNumber});
+
+  final ValueChanged<int> onNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 2.35,
+      children: [
+        for (var number = 1; number <= 9; number++)
+          _IosNumberButton(number: number, onTap: () => onNumber(number)),
+      ],
+    );
+  }
+}
+
+class _IosNumberButton extends StatelessWidget {
+  const _IosNumberButton({required this.number, required this.onTap});
+
+  final int number;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      color: CupertinoColors.systemBackground.resolveFrom(context),
+      borderRadius: BorderRadius.circular(14),
+      onPressed: onTap,
+      child: Text(
+        '$number',
+        style: const TextStyle(
+          color: _SudokuPageState._iosBlue,
+          fontSize: 25,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -959,6 +1469,7 @@ class _SudokuBoard extends StatelessWidget {
     required this.isCompletedColumn,
     required this.isCompletedBox,
     required this.onCellTap,
+    this.iosStyle = false,
   });
 
   final List<SudokuCell> cells;
@@ -968,24 +1479,32 @@ class _SudokuBoard extends StatelessWidget {
   final bool Function(int col) isCompletedColumn;
   final bool Function(int row, int col) isCompletedBox;
   final ValueChanged<int> onCellTap;
+  final bool iosStyle;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF566070), width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 14,
-            offset: Offset(0, 7),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(iosStyle ? 12 : 8),
+        border: Border.all(
+          color: iosStyle
+              ? _SudokuPageState._iosSeparator
+              : const Color(0xFF566070),
+          width: iosStyle ? 1 : 2,
+        ),
+        boxShadow: iosStyle
+            ? const []
+            : const [
+                BoxShadow(
+                  color: Color(0x10000000),
+                  blurRadius: 14,
+                  offset: Offset(0, 7),
+                ),
+              ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(iosStyle ? 11 : 6),
         child: GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -1019,15 +1538,24 @@ class _SudokuBoard extends StatelessWidget {
               background: background,
               border: Border(
                 right: BorderSide(
-                  color: const Color(0xFF9AA4B2),
-                  width: col == 2 || col == 5 ? 1.6 : 0.55,
+                  color: iosStyle
+                      ? _SudokuPageState._iosSeparator
+                      : const Color(0xFF9AA4B2),
+                  width: col == 2 || col == 5
+                      ? (iosStyle ? 1.25 : 1.6)
+                      : (iosStyle ? 0.45 : 0.55),
                 ),
                 bottom: BorderSide(
-                  color: const Color(0xFF9AA4B2),
-                  width: row == 2 || row == 5 ? 1.6 : 0.55,
+                  color: iosStyle
+                      ? _SudokuPageState._iosSeparator
+                      : const Color(0xFF9AA4B2),
+                  width: row == 2 || row == 5
+                      ? (iosStyle ? 1.25 : 1.6)
+                      : (iosStyle ? 0.45 : 0.55),
                 ),
               ),
               onTap: () => onCellTap(index),
+              iosStyle: iosStyle,
             );
           },
         ),
@@ -1043,12 +1571,14 @@ class _SudokuCellTile extends StatelessWidget {
     required this.background,
     required this.border,
     required this.onTap,
+    this.iosStyle = false,
   });
 
   final SudokuCell cell;
   final Color background;
   final Border border;
   final VoidCallback onTap;
+  final bool iosStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -1066,8 +1596,10 @@ class _SudokuCellTile extends StatelessWidget {
                   style: TextStyle(
                     color: cell.fixed
                         ? _SudokuPageState._ink
-                        : _SudokuPageState._accent,
-                    fontSize: 22,
+                        : (iosStyle
+                              ? _SudokuPageState._iosBlue
+                              : _SudokuPageState._accent),
+                    fontSize: iosStyle ? 24 : 22,
                     fontWeight: cell.fixed ? FontWeight.w700 : FontWeight.w600,
                   ),
                 ),

@@ -1,8 +1,14 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shudu/main.dart';
 
-Future<void> pumpSudoku(WidgetTester tester) async {
+Future<void> pumpSudoku(WidgetTester tester, {TargetPlatform? platform}) async {
+  if (platform != null) {
+    debugDefaultTargetPlatformOverride = platform;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+  }
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -112,5 +118,39 @@ void main() {
     expect(find.text('关于'), findsOneWidget);
     expect(find.text('版本号：$appVersion'), findsOneWidget);
     expect(find.text('作者：Noah.Ni'), findsOneWidget);
+  });
+
+  testWidgets('uses iOS controls for the Cupertino game shell', (tester) async {
+    await pumpSudoku(tester, platform: TargetPlatform.iOS);
+
+    expect(find.text('数独'), findsOneWidget);
+    expect(find.text('中等'), findsOneWidget);
+    expect(find.byIcon(CupertinoIcons.ellipsis_circle), findsOneWidget);
+    expect(find.byIcon(Icons.more_horiz_rounded), findsNothing);
+
+    await tester.tap(find.text('新游戏'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byType(CupertinoSlidingSegmentedControl<SudokuDifficulty>),
+      findsOneWidget,
+    );
+    expect(find.text('选择难度'), findsOneWidget);
+
+    await tester.tap(find.text('困难'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('开始游戏'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('困难'), findsOneWidget);
+    expect(find.text('选择难度'), findsNothing);
+
+    await tester.tap(find.byIcon(CupertinoIcons.ellipsis_circle));
+    await tester.pumpAndSettle();
+
+    expect(find.text('版本号：$appVersion'), findsOneWidget);
+    expect(find.text('作者：Noah.Ni'), findsOneWidget);
+
+    debugDefaultTargetPlatformOverride = null;
   });
 }
