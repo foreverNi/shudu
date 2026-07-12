@@ -1,0 +1,128 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "数独游戏"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "数独"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "数独"
+    },
+    {
+      "name": "app_name",
+      "value": "数独"
+    },
+    {
+      "name": "about_title",
+      "value": "关于"
+    },
+    {
+      "name": "about_version",
+      "value": "版本号：1.0.3"
+    },
+    {
+      "name": "about_author",
+      "value": "作者：Noah.Ni"
+    },
+    {
+      "name": "close",
+      "value": "关闭"
+    },
+    {
+      "name": "new_game",
+      "value": "新建"
+    },
+    {
+      "name": "more",
+      "value": "更多"
+    },
+    {
+      "name": "pause",
+      "value": "暂停"
+    },
+    {
+      "name": "resume",
+      "value": "继续"
+    },
+    {
+      "name": "about",
+      "value": "关于"
+    },
+    {
+      "name": "select_difficulty",
+      "value": "选择难度"
+    },
+    {
+      "name": "start_game",
+      "value": "开始游戏"
+    },
+    {
+      "name": "cancel",
+      "value": "取消"
+    },
+    {
+      "name": "undo",
+      "value": "撤销"
+    },
+    {
+      "name": "erase",
+      "value": "清除"
+    },
+    {
+      "name": "hint",
+      "value": "提示"
+    },
+    {
+      "name": "note",
+      "value": "候选"
+    },
+    {
+      "name": "difficulty",
+      "value": "难度"
+    },
+    {
+      "name": "time",
+      "value": "时间"
+    },
+    {
+      "name": "mistakes",
+      "value": "错误"
+    },
+    {
+      "name": "congratulations",
+      "value": "恭喜完成"
+    },
+    {
+      "name": "continue_view",
+      "value": "继续查看"
+    },
+    {
+      "name": "play_again",
+      "value": "再来一局"
+    },
+    {
+      "name": "completed",
+      "value": "已完成"
+    },
+    {
+      "name": "subtitle",
+      "value": "专注思考，享受逻辑之美"
+    },
+    {
+      "name": "tab_game",
+      "value": "游戏"
+    },
+    {
+      "name": "tab_stats",
+      "value": "统计"
+    },
+    {
+      "name": "tab_achievements",
+      "value": "成就"
+    }
+  ]
+}

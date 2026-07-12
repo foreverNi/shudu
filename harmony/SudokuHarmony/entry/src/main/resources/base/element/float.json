@@ -1,0 +1,32 @@
+{
+  "float": [
+    { "name": "title_font_size", "value": "43fp" },
+    { "name": "subtitle_font_size", "value": "15fp" },
+    { "name": "section_title_font_size", "value": "20fp" },
+    { "name": "cell_digit_font_size", "value": "22fp" },
+    { "name": "note_digit_font_size", "value": "8fp" },
+    { "name": "metric_value_font_size", "value": "15fp" },
+    { "name": "metric_label_font_size", "value": "11fp" },
+    { "name": "metric_icon_font_size", "value": "20fp" },
+    { "name": "button_font_size", "value": "16fp" },
+    { "name": "numpad_font_size", "value": "20fp" },
+    { "name": "tool_label_font_size", "value": "11fp" },
+    { "name": "tool_icon_font_size", "value": "22fp" },
+    { "name": "badge_font_size", "value": "12fp" },
+    { "name": "candidate_font_size", "value": "19fp" },
+    { "name": "nav_font_size", "value": "11fp" },
+    { "name": "card_border_radius", "value": "22vp" },
+    { "name": "btn_border_radius", "value": "16vp" },
+    { "name": "board_border_radius", "value": "8vp" },
+    { "name": "numpad_btn_radius", "value": "10vp" },
+    { "name": "board_max_size", "value": "384vp" },
+    { "name": "board_min_size", "value": "292vp" },
+    { "name": "page_margin", "value": "22vp" },
+    { "name": "section_gap", "value": "22vp" },
+    { "name": "status_card_h", "value": "70vp" },
+    { "name": "toolbar_h", "value": "72vp" },
+    { "name": "bottom_nav_h", "value": "74vp" },
+    { "name": "header_top_pad", "value": "42vp" },
+    { "name": "icon_circle_size", "value": "34vp" }
+  ]
+}
