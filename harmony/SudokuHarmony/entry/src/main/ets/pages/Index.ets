@@ -6,6 +6,7 @@ import { ActionToolbar } from '../components/ActionToolbar'
 import { DifficultySheet } from '../components/DifficultySheet'
 import { BottomNav } from '../components/BottomNav'
 import { StatsPage } from '../components/StatsPage'
+import { AchievementsPage } from '../components/AchievementsPage'
 import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
 import { common } from '@kit.AbilityKit'
 
@@ -394,26 +395,10 @@ struct Index {
   @Builder
   AchievementsContent() {
     Column() {
-      Column({ space: 10 }) {
-        Image($r('app.media.icon_trophy'))
-          .width(42)
-          .height(42)
-          .objectFit(ImageFit.Contain)
-        Text($r('app.string.tab_achievements'))
-          .fontSize($r('app.float.section_title_font_size'))
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-        Text('持续完成棋局，成就系统即将开放')
-          .fontSize(13)
-          .fontColor($r('app.color.text_secondary'))
-      }
-      .width(this.boardSize)
-      .height(168)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
-      .backgroundColor($r('app.color.bg_card'))
-      .borderRadius($r('app.float.card_border_radius'))
-      .shadow({ radius: 26, color: $r('app.color.card_shadow'), offsetY: 9 })
+      AchievementsPage({
+        summary: this.statsSummary,
+        contentWidth: this.boardSize
+      })
     }
     .width('100%')
     .layoutWeight(1)
@@ -429,7 +414,7 @@ struct Index {
           .width(154)
           .height(58)
           .objectFit(ImageFit.Contain)
-        Text(this.activeTab === 1 ? '沉淀每一局的思考节奏' : $r('app.string.subtitle'))
+        Text(this.activeTab === 1 ? '沉淀每一局的思考节奏' : (this.activeTab === 2 ? '记录每一次突破与坚持' : $r('app.string.subtitle')))
           .fontSize($r('app.float.subtitle_font_size'))
           .fontWeight(FontWeight.Normal)
           .fontColor($r('app.color.text_subtitle'))
