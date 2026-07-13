@@ -5,6 +5,9 @@ import { NumberPad } from '../components/NumberPad'
 import { ActionToolbar } from '../components/ActionToolbar'
 import { DifficultySheet } from '../components/DifficultySheet'
 import { BottomNav } from '../components/BottomNav'
+import { StatsPage } from '../components/StatsPage'
+import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
+import { common } from '@kit.AbilityKit'
 
 const APP_VERSION: string = '1.0.3'
 const APP_AUTHOR: string = 'Noah.Ni'
@@ -30,9 +33,11 @@ struct Index {
   @State screenH: number = 0
   @State contentGap: number = 16
   @State activeTab: number = 0
+  @State statsSummary: StatsSummary = emptyStatsSummary()
 
   private timerId: number = -1
   private containerWidth: number = 360
+  private statsStore: StatsStore = new StatsStore()
 
   private readonly HEADER_H: number = 92
   private readonly STATUS_H: number = 70
@@ -43,6 +48,10 @@ struct Index {
 
   aboutToAppear(): void {
     this.loadPuzzle(this.difficulty)
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext
+    if (context) {
+      this.statsSummary = this.statsStore.init(context)
+    }
     this.timerId = setInterval(() => {
       if (!this.paused && !this.solved) {
         this.seconds += 1
@@ -193,6 +202,7 @@ struct Index {
     const diffLabel: string = difficultyLabel(this.difficulty)
     const timeStr: string = this.timeLabel
     const mistakesStr: string = this.mistakes.toString()
+    this.statsSummary = this.statsStore.recordGame(this.difficulty, this.seconds)
     this.getUIContext().showAlertDialog({
       title: '恭喜完成',
       message: '你已正确完成' + diffLabel + '数独。\n用时 ' + timeStr + '，错误 ' + mistakesStr + '/3。',
@@ -284,43 +294,13 @@ struct Index {
       Column() {
         this.HeaderBar()
 
-        Column() {
-          this.StatusCard()
+        if (this.activeTab === 0) {
+          this.GameContent()
+        } else if (this.activeTab === 1) {
+          this.StatsContent()
+        } else {
+          this.AchievementsContent()
         }
-        .width(this.boardSize)
-        .alignItems(HorizontalAlign.Center)
-        .margin({ top: this.contentGap })
-
-        Column() {
-          this.BoardArea()
-        }
-        .margin({ top: this.contentGap })
-
-        Column() {
-          ActionToolbar({
-            noteMode: this.noteMode,
-            hintCount: this.hintCount(),
-            onUndo: () => { this.undo() },
-            onErase: () => { this.eraseSelected() },
-            onHint: () => { this.hint() },
-            onNoteMode: () => { this.noteMode = !this.noteMode }
-          })
-        }
-        .width(this.boardSize)
-        .alignItems(HorizontalAlign.Center)
-        .margin({ top: this.contentGap })
-
-        Column() {
-          NumberPad({
-            selectedNumber: this.selectedCellValue(),
-            onNumber: (num: number) => { this.handleNumber(num) }
-          })
-        }
-        .width(this.boardSize)
-        .alignItems(HorizontalAlign.Center)
-        .margin({ top: this.contentGap })
-
-        Blank()
 
         BottomNav({
           activeTab: this.activeTab,
@@ -352,6 +332,96 @@ struct Index {
   }
 
   @Builder
+  GameContent() {
+    Column() {
+      Column() {
+        this.StatusCard()
+      }
+      .width(this.boardSize)
+      .alignItems(HorizontalAlign.Center)
+      .margin({ top: this.contentGap })
+
+      Column() {
+        this.BoardArea()
+      }
+      .margin({ top: this.contentGap })
+
+      Column() {
+        ActionToolbar({
+          noteMode: this.noteMode,
+          hintCount: this.hintCount(),
+          onUndo: () => { this.undo() },
+          onErase: () => { this.eraseSelected() },
+          onHint: () => { this.hint() },
+          onNoteMode: () => { this.noteMode = !this.noteMode }
+        })
+      }
+      .width(this.boardSize)
+      .alignItems(HorizontalAlign.Center)
+      .margin({ top: this.contentGap })
+
+      Column() {
+        NumberPad({
+          selectedNumber: this.selectedCellValue(),
+          onNumber: (num: number) => { this.handleNumber(num) }
+        })
+      }
+      .width(this.boardSize)
+      .alignItems(HorizontalAlign.Center)
+      .margin({ top: this.contentGap })
+
+      Blank()
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .alignItems(HorizontalAlign.Center)
+  }
+
+  @Builder
+  StatsContent() {
+    Column() {
+      StatsPage({
+        summary: this.statsSummary,
+        contentWidth: this.boardSize
+      })
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .alignItems(HorizontalAlign.Center)
+    .margin({ top: this.contentGap })
+  }
+
+  @Builder
+  AchievementsContent() {
+    Column() {
+      Column({ space: 10 }) {
+        Image($r('app.media.icon_trophy'))
+          .width(42)
+          .height(42)
+          .objectFit(ImageFit.Contain)
+        Text($r('app.string.tab_achievements'))
+          .fontSize($r('app.float.section_title_font_size'))
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+        Text('持续完成棋局，成就系统即将开放')
+          .fontSize(13)
+          .fontColor($r('app.color.text_secondary'))
+      }
+      .width(this.boardSize)
+      .height(168)
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+      .backgroundColor($r('app.color.bg_card'))
+      .borderRadius($r('app.float.card_border_radius'))
+      .shadow({ radius: 26, color: $r('app.color.card_shadow'), offsetY: 9 })
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .alignItems(HorizontalAlign.Center)
+    .margin({ top: this.contentGap })
+  }
+
+  @Builder
   HeaderBar() {
     Row() {
       Column({ space: 4 }) {
@@ -359,7 +429,7 @@ struct Index {
           .width(154)
           .height(58)
           .objectFit(ImageFit.Contain)
-        Text($r('app.string.subtitle'))
+        Text(this.activeTab === 1 ? '沉淀每一局的思考节奏' : $r('app.string.subtitle'))
           .fontSize($r('app.float.subtitle_font_size'))
           .fontWeight(FontWeight.Normal)
           .fontColor($r('app.color.text_subtitle'))
