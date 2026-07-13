@@ -5,9 +5,9 @@ export struct BottomNav {
 
   build() {
     Row() {
-      this.TabItem(0, $r('app.media.icon_home'), $r('app.string.tab_game'))
-      this.TabItem(1, $r('app.media.icon_stats_gray'), $r('app.string.tab_stats'))
-      this.TabItem(2, $r('app.media.icon_trophy_gray'), $r('app.string.tab_achievements'))
+      this.TabItem(0, $r('app.media.icon_home'), $r('app.media.icon_home_gray'), $r('app.string.tab_game'))
+      this.TabItem(1, $r('app.media.icon_stats'), $r('app.media.icon_stats_gray'), $r('app.string.tab_stats'))
+      this.TabItem(2, $r('app.media.icon_trophy'), $r('app.media.icon_trophy_gray'), $r('app.string.tab_achievements'))
     }
     .width('100%')
     .height($r('app.float.bottom_nav_h'))
@@ -19,23 +19,23 @@ export struct BottomNav {
   }
 
   @Builder
-  TabItem(index: number, iconRes: Resource, label: ResourceStr) {
+  TabItem(index: number, activeIconRes: Resource, inactiveIconRes: Resource, label: ResourceStr) {
     Column({ space: 4 }) {
-      Image(iconRes)
+      Image(index === this.activeTab ? activeIconRes : inactiveIconRes)
         .width(24)
         .height(24)
         .objectFit(ImageFit.Contain)
       Text(label)
         .fontSize($r('app.float.nav_font_size'))
-        .fontWeight(index === 0 ? FontWeight.Medium : FontWeight.Normal)
-        .fontColor(index === 0 ? $r('app.color.nav_active') : $r('app.color.nav_default'))
+        .fontWeight(index === this.activeTab ? FontWeight.Medium : FontWeight.Normal)
+        .fontColor(index === this.activeTab ? $r('app.color.nav_active') : $r('app.color.nav_default'))
     }
     .width(92)
     .height(49)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .borderRadius(18)
-    .backgroundColor(index === 0 ? $r('app.color.nav_active_bg') : Color.Transparent)
+    .backgroundColor(index === this.activeTab ? $r('app.color.nav_active_bg') : Color.Transparent)
     .onClick(() => {
       this.onTabChange(index)
     })
