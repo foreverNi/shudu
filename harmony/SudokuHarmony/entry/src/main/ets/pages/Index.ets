@@ -10,7 +10,7 @@ import { AchievementsPage } from '../components/AchievementsPage'
 import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
 import { common } from '@kit.AbilityKit'
 
-const APP_VERSION: string = '1.0.3'
+const APP_VERSION: string = '1.0.4'
 const APP_AUTHOR: string = 'Noah.Ni'
 const MAX_HISTORY: number = 80
 const MAX_MISTAKES: number = 3
