@@ -35,8 +35,10 @@ struct Index {
   @State contentGap: number = 16
   @State activeTab: number = 0
   @State statsSummary: StatsSummary = emptyStatsSummary()
+  @State hintUsageCount: number = 0
 
   private timerId: number = -1
+  private pageVisible: boolean = true
   private containerWidth: number = 360
   private statsStore: StatsStore = new StatsStore()
 
@@ -53,16 +55,36 @@ struct Index {
     if (context) {
       this.statsSummary = this.statsStore.init(context)
     }
+    this.startTimer()
+  }
+
+  aboutToDisappear(): void {
+    this.stopTimer()
+  }
+
+  onPageShow(): void {
+    this.pageVisible = true
+  }
+
+  onPageHide(): void {
+    this.pageVisible = false
+  }
+
+  private startTimer(): void {
+    if (this.timerId !== -1) {
+      return
+    }
     this.timerId = setInterval(() => {
-      if (!this.paused && !this.solved) {
+      if (this.pageVisible && !this.paused && !this.solved) {
         this.seconds += 1
       }
     }, 1000)
   }
 
-  aboutToDisappear(): void {
+  private stopTimer(): void {
     if (this.timerId !== -1) {
       clearInterval(this.timerId)
+      this.timerId = -1
     }
   }
 
@@ -90,6 +112,7 @@ struct Index {
     this.seconds = 0
     this.history = []
     this.noteMode = false
+    this.hintUsageCount = 0
     this.paused = false
     this.solved = false
   }
@@ -183,6 +206,7 @@ struct Index {
     nc.noteFlags = [false, false, false, false, false, false, false, false, false]
     newCells[this.selectedIndex] = nc
     this.cells = newCells
+    this.hintUsageCount += 1
     this.checkCompletion()
   }
 
@@ -250,7 +274,7 @@ struct Index {
   }
 
   private hintCount(): number {
-    return 3 - this.mistakes
+    return this.hintUsageCount
   }
 
   private calcBoardSize(): number {

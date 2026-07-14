@@ -34,25 +34,29 @@ export struct ActionToolbar {
 
       Button() {
         Row({ space: 8 }) {
-          Image($r('app.media.icon_note_white'))
+          Image(this.noteMode ? $r('app.media.icon_note_white') : $r('app.media.icon_note'))
             .width(28)
             .height(28)
             .objectFit(ImageFit.Contain)
           Text($r('app.string.note'))
             .fontSize($r('app.float.candidate_font_size'))
             .fontWeight(FontWeight.Bold)
-            .fontColor(Color.White)
+            .fontColor(this.noteMode ? Color.White : $r('app.color.btn_tool_text'))
         }
         .justifyContent(FlexAlign.Center)
         .alignItems(VerticalAlign.Center)
       }
       .width(94)
       .height(50)
-      .linearGradient({
+      .linearGradient(this.noteMode ? {
         angle: 180,
         colors: [['#2E8BFF', 0], ['#1376F8', 1]]
+      } : {
+        angle: 180,
+        colors: [[$r('app.color.btn_tool_bg'), 0], [$r('app.color.btn_tool_bg'), 1]]
       })
       .borderRadius(14)
+      .shadow({ radius: 16, color: $r('app.color.btn_shadow'), offsetY: 5 })
       .onClick(() => {
         this.onNoteMode()
       })
