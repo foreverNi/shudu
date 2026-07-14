@@ -38,7 +38,6 @@ struct Index {
   @State hintUsageCount: number = 0
 
   private timerId: number = -1
-  private pageVisible: boolean = true
   private containerWidth: number = 360
   private statsStore: StatsStore = new StatsStore()
 
@@ -63,11 +62,11 @@ struct Index {
   }
 
   onPageShow(): void {
-    this.pageVisible = true
+    this.startTimer()
   }
 
   onPageHide(): void {
-    this.pageVisible = false
+    this.stopTimer()
   }
 
   private startTimer(): void {
@@ -75,7 +74,7 @@ struct Index {
       return
     }
     this.timerId = setInterval(() => {
-      if (this.pageVisible && !this.paused && !this.solved) {
+      if (!this.paused && !this.solved) {
         this.seconds += 1
       }
     }, 1000)
