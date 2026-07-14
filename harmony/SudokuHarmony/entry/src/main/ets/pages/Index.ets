@@ -37,7 +37,7 @@ struct Index {
   @State statsSummary: StatsSummary = emptyStatsSummary()
   @State hintUsageCount: number = 0
 
-  private timerId: number = -1
+  private textTimerController: TextTimerController = new TextTimerController()
   private containerWidth: number = 360
   private statsStore: StatsStore = new StatsStore()
 
@@ -70,21 +70,13 @@ struct Index {
   }
 
   private startTimer(): void {
-    if (this.timerId !== -1) {
-      return
+    if (!this.paused && !this.solved) {
+      this.textTimerController.start()
     }
-    this.timerId = setInterval(() => {
-      if (!this.paused && !this.solved) {
-        this.seconds += 1
-      }
-    }, 1000)
   }
 
   private stopTimer(): void {
-    if (this.timerId !== -1) {
-      clearInterval(this.timerId)
-      this.timerId = -1
-    }
+    this.textTimerController.pause()
   }
 
   private loadPuzzle(d: SudokuDifficulty): void {
@@ -114,6 +106,8 @@ struct Index {
     this.hintUsageCount = 0
     this.paused = false
     this.solved = false
+    this.textTimerController.reset()
+    this.startTimer()
   }
 
   private saveHistory(): void {
@@ -223,6 +217,7 @@ struct Index {
       return
     }
     this.solved = true
+    this.stopTimer()
     const diffLabel: string = difficultyLabel(this.difficulty)
     const timeStr: string = this.timeLabel
     const mistakesStr: string = this.mistakes.toString()
@@ -263,6 +258,11 @@ struct Index {
 
   private togglePause(): void {
     this.paused = !this.paused
+    if (this.paused) {
+      this.stopTimer()
+    } else {
+      this.startTimer()
+    }
   }
 
   private selectedCellValue(): number {
@@ -521,6 +521,48 @@ struct Index {
   }
 
   @Builder
+  TimerMetricItem() {
+    Row({ space: 10 }) {
+      Column() {
+        Image($r('app.media.icon_clock'))
+          .width(24)
+          .height(24)
+          .objectFit(ImageFit.Contain)
+      }
+      .width($r('app.float.icon_circle_size'))
+      .height($r('app.float.icon_circle_size'))
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+      .borderRadius(14)
+      .backgroundColor($r('app.color.bg_icon_circle'))
+      .shadow({ radius: 18, color: $r('app.color.btn_shadow'), offsetY: 6 })
+
+      Column({ space: 4 }) {
+        TextTimer({ isCountDown: false, controller: this.textTimerController })
+          .format('mm:ss')
+          .fontSize($r('app.float.metric_value_font_size'))
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+          .onTimer((_utc: number, elapsedTime: number) => {
+            this.seconds = Math.floor(elapsedTime)
+          })
+          .onAppear(() => {
+            this.startTimer()
+          })
+
+        Text($r('app.string.time'))
+          .fontSize($r('app.float.metric_label_font_size'))
+          .fontWeight(FontWeight.Normal)
+          .fontColor($r('app.color.text_secondary'))
+      }
+      .alignItems(HorizontalAlign.Start)
+    }
+    .layoutWeight(1)
+    .justifyContent(FlexAlign.Center)
+    .alignItems(VerticalAlign.Center)
+  }
+
+  @Builder
   StatusCard() {
     Row() {
       this.MetricItem($r('app.media.icon_difficulty'), this.solved ? '已完成' : difficultyLabel(this.difficulty), $r('app.string.difficulty'), false)
@@ -530,7 +572,7 @@ struct Index {
         .height(48)
         .color($r('app.color.divider'))
 
-      this.MetricItem($r('app.media.icon_clock'), Math.floor(this.seconds / 60).toString().padStart(2, '0') + ':' + (this.seconds % 60).toString().padStart(2, '0'), $r('app.string.time'), false)
+      this.TimerMetricItem()
 
       Divider()
         .vertical(true)

@@ -11,10 +11,11 @@
 - `devecocli build --product default` from `harmony/SudokuHarmony`: passed.
 - `devecocli run --device "Pura 90" --product default`: passed, app installed and launched.
 - `devecocli log --device "Pura 90" --bundle-name com.noahni.sudokuharmony --tail 80 --from 2m`: no startup crash found.
+- `hdc shell uitest dumpLayout` on `Pura 90`: passed, foreground timer text changed from `00:46` to `01:16`.
 - `/Users/noah/development/flutter/bin/flutter analyze`: passed, no issues found.
 - `/Users/noah/development/flutter/bin/flutter test`: passed, 6 tests passed.
 
 ## Notes
 
-- Runtime smoke test covered install and launch on the `Pura 90` emulator.
+- Runtime smoke test covered install, launch, and foreground timer progression on the `Pura 90` emulator.
 - Existing uncommitted signing files and local project changes were left untouched.
