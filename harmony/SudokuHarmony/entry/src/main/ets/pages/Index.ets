@@ -574,12 +574,6 @@ struct Index {
           }
         },
         {
-          value: '华为登录',
-          action: () => {
-            this.startHuaweiGameService(true)
-          }
-        },
-        {
           value: '关于',
           action: () => {
             this.showAboutDialog()
