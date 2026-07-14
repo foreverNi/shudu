@@ -8,6 +8,8 @@ Date: 2026-07-14
 - Added the Huawei Game Service login flow in `Index.ets`: `init` -> `unionLogin` -> `verifyLocalPlayer`.
 - Added `playerChanged` handling, manual Huawei login retry, local failure gating, and default role reporting for this no-role Sudoku game.
 - The Sudoku board and timer remain gated until `verifyLocalPlayer` succeeds.
+- Moved `init` into `EntryAbility.onWindowStageCreate` after `loadContent` succeeds, matching Huawei's documented lifecycle requirement.
+- Added a shared `HuaweiGameServiceState` so the page waits for the `EntryAbility` initialization instead of starting `init` from the component lifecycle.
 
 ## Source Basis
 
@@ -17,7 +19,7 @@ Date: 2026-07-14
 
 ## Verification
 
-- `devecocli build --product default`: passed after configuring the real AppGallery Connect IDs.
+- `devecocli build --product default`: passed after moving `init` to `EntryAbility`.
 - `flutter analyze`: passed, no issues found.
 - `flutter test`: passed, 6 tests.
 - `devecocli device list`: blocked by local DevEco `hdc` signature error: `invalid signature (code or signature have been modified)`.

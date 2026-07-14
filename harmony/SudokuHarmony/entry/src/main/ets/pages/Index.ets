@@ -8,6 +8,7 @@ import { BottomNav } from '../components/BottomNav'
 import { StatsPage } from '../components/StatsPage'
 import { AchievementsPage } from '../components/AchievementsPage'
 import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
+import { HuaweiGameServiceState } from '../model/HuaweiGameServiceState'
 import { common } from '@kit.AbilityKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { gamePlayer } from '@kit.GameServiceKit'
@@ -303,8 +304,7 @@ struct Index {
     }
 
     try {
-      await gamePlayer.init(context)
-      hilog.info(LOG_DOMAIN, LOG_TAG, 'Game Service initialized.')
+      await HuaweiGameServiceState.waitInitialized()
       this.registerHuaweiPlayerChangedListener()
 
       const loginParam: gamePlayer.UnionLoginParam = {
@@ -331,7 +331,7 @@ struct Index {
       const message = err && err.message ? err.message : JSON.stringify(error)
       hilog.error(LOG_DOMAIN, LOG_TAG, 'Game Service login or verification failed. code=%{public}s message=%{public}s',
         code, message)
-      this.handleGameServiceFailure('华为账号合规校验未通过，请重新登录后再进入游戏。错误码：' + code)
+      this.handleGameServiceFailure('华为游戏服务登录或合规校验失败，请重新登录后再进入游戏。错误码：' + code)
     }
   }
 
