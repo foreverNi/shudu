@@ -9,11 +9,16 @@ import { StatsPage } from '../components/StatsPage'
 import { AchievementsPage } from '../components/AchievementsPage'
 import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
 import { common } from '@kit.AbilityKit'
+import { BusinessError } from '@kit.BasicServicesKit'
+import { gamePlayer } from '@kit.GameServiceKit'
+import { hilog } from '@kit.PerformanceAnalysisKit'
 
 const APP_VERSION: string = '1.0.4'
-const APP_AUTHOR: string = 'Noah.Ni'
+const APP_AUTHOR: string = '倪国瑜'
 const MAX_HISTORY: number = 80
 const MAX_MISTAKES: number = 3
+const LOG_DOMAIN: number = 0x0000
+const LOG_TAG: string = 'SudokuGameService'
 
 @Entry
 @Component
@@ -36,10 +41,13 @@ struct Index {
   @State activeTab: number = 0
   @State statsSummary: StatsSummary = emptyStatsSummary()
   @State hintUsageCount: number = 0
+  @State gameServiceReady: boolean = false
+  @State gameServiceMessage: string = '正在进行华为账号合规校验...'
 
   private textTimerController: TextTimerController = new TextTimerController()
   private containerWidth: number = 360
   private statsStore: StatsStore = new StatsStore()
+  private gameServiceStarted: boolean = false
 
   private readonly HEADER_H: number = 92
   private readonly STATUS_H: number = 70
@@ -54,6 +62,7 @@ struct Index {
     if (context) {
       this.statsSummary = this.statsStore.init(context)
     }
+    this.startHuaweiGameService(false)
     this.startTimer()
   }
 
@@ -70,7 +79,7 @@ struct Index {
   }
 
   private startTimer(): void {
-    if (!this.paused && !this.solved) {
+    if (this.gameServiceReady && !this.paused && !this.solved) {
       this.textTimerController.start()
     }
   }
@@ -276,6 +285,99 @@ struct Index {
     return this.hintUsageCount
   }
 
+  private startHuaweiGameService(showLoginDialog: boolean): void {
+    if (this.gameServiceStarted && !showLoginDialog) {
+      return
+    }
+    this.gameServiceStarted = true
+    this.gameServiceReady = false
+    this.gameServiceMessage = showLoginDialog ? '正在重新拉起华为账号登录...' : '正在进行华为账号合规校验...'
+    this.loginAndVerifyHuaweiPlayer(showLoginDialog)
+  }
+
+  private async loginAndVerifyHuaweiPlayer(showLoginDialog: boolean): Promise<void> {
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext
+    if (!context) {
+      this.handleGameServiceFailure('未获取到应用上下文，无法进行华为账号合规校验。')
+      return
+    }
+
+    try {
+      await gamePlayer.init(context)
+      hilog.info(LOG_DOMAIN, LOG_TAG, 'Game Service initialized.')
+      this.registerHuaweiPlayerChangedListener()
+
+      const loginParam: gamePlayer.UnionLoginParam = {
+        thirdAccountInfos: [],
+        showLoginDialog: showLoginDialog
+      }
+      const loginResult: gamePlayer.UnionLoginResult = await gamePlayer.unionLogin(context, loginParam)
+      hilog.info(LOG_DOMAIN, LOG_TAG, 'Game Service union login succeeded. account=%{public}s',
+        loginResult.accountIdentifier ? loginResult.accountIdentifier : loginResult.accountName)
+
+      const thirdUserInfo: gamePlayer.ThirdUserInfo = {
+        thirdOpenId: ''
+      }
+      await gamePlayer.verifyLocalPlayer(context, thirdUserInfo)
+      hilog.info(LOG_DOMAIN, LOG_TAG, 'Game Service local player verification succeeded.')
+      await this.saveHuaweiDefaultRole(context, loginResult)
+
+      this.gameServiceReady = true
+      this.gameServiceMessage = ''
+      this.startTimer()
+    } catch (error) {
+      const err = error as BusinessError
+      const code = err && err.code !== undefined ? err.code.toString() : 'unknown'
+      const message = err && err.message ? err.message : JSON.stringify(error)
+      hilog.error(LOG_DOMAIN, LOG_TAG, 'Game Service login or verification failed. code=%{public}s message=%{public}s',
+        code, message)
+      this.handleGameServiceFailure('华为账号合规校验未通过，请重新登录后再进入游戏。错误码：' + code)
+    }
+  }
+
+  private registerHuaweiPlayerChangedListener(): void {
+    try {
+      gamePlayer.off('playerChanged')
+      gamePlayer.on('playerChanged', (result: gamePlayer.PlayerChangedResult): void => {
+        hilog.warn(LOG_DOMAIN, LOG_TAG, 'Game Service player changed. event=%{public}d', result.event)
+        this.gameServiceReady = false
+        this.stopTimer()
+        this.startHuaweiGameService(true)
+      })
+    } catch (error) {
+      const err = error as BusinessError
+      hilog.error(LOG_DOMAIN, LOG_TAG, 'Failed to register playerChanged listener. code=%{public}d message=%{public}s',
+        err.code, err.message)
+    }
+  }
+
+  private async saveHuaweiDefaultRole(context: common.UIAbilityContext,
+    loginResult: gamePlayer.UnionLoginResult): Promise<void> {
+    const localPlayer: gamePlayer.GSKLocalPlayer = loginResult.localPlayer
+    if (!localPlayer || !localPlayer.gamePlayerId) {
+      return
+    }
+    const role: gamePlayer.GSKPlayerRole = {
+      roleId: '0',
+      roleName: 'default',
+      gamePlayerId: localPlayer.gamePlayerId
+    }
+    try {
+      await gamePlayer.savePlayerRole(context, role)
+      hilog.info(LOG_DOMAIN, LOG_TAG, 'Game Service default role saved.')
+    } catch (error) {
+      const err = error as BusinessError
+      hilog.warn(LOG_DOMAIN, LOG_TAG, 'Game Service default role save failed. code=%{public}d message=%{public}s',
+        err.code, err.message)
+    }
+  }
+
+  private handleGameServiceFailure(message: string): void {
+    this.stopTimer()
+    this.gameServiceReady = false
+    this.gameServiceMessage = message
+  }
+
   private calcBoardSize(): number {
     const padding: number = this.containerWidth < 360 ? 24 : 44
     const available: number = this.containerWidth - padding
@@ -472,6 +574,12 @@ struct Index {
           }
         },
         {
+          value: '华为登录',
+          action: () => {
+            this.startHuaweiGameService(true)
+          }
+        },
+        {
           value: '关于',
           action: () => {
             this.showAboutDialog()
@@ -597,12 +705,42 @@ struct Index {
       SudokuBoard({
         cells: this.cells,
         selectedIndex: this.selectedIndex,
-        paused: this.paused,
+        paused: this.paused || !this.gameServiceReady,
         mistakes: this.mistakes,
         onCellTap: (index: number) => {
-          this.selectedIndex = index
+          if (this.gameServiceReady) {
+            this.selectedIndex = index
+          }
         }
       })
+
+      if (!this.gameServiceReady) {
+        Column({ space: 12 }) {
+          Text(this.gameServiceMessage)
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .textAlign(TextAlign.Center)
+
+          Button('重新登录')
+            .fontSize(13)
+            .fontColor(Color.White)
+            .backgroundColor($r('app.color.primary_blue'))
+            .borderRadius(18)
+            .height(36)
+            .padding({ left: 18, right: 18 })
+            .onClick(() => {
+              this.startHuaweiGameService(true)
+            })
+        }
+        .width(this.boardSize)
+        .height(this.boardSize)
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#EAF2FFEE')
+        .borderRadius($r('app.float.card_border_radius'))
+        .position({ x: 0, y: 0 })
+      }
     }
     .width(this.boardSize)
     .height(this.boardSize)
