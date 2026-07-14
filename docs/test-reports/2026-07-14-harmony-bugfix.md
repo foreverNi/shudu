@@ -5,6 +5,7 @@
 - Pause game timer while the app page is hidden/backgrounded, resume when shown again.
 - Reset hint badge at the start of each game and show it only after hint usage.
 - Remove candidate button highlight when candidate mode is off.
+- Render Sudoku board grid lines consistently without blocking cell taps.
 
 ## Verification
 
@@ -12,10 +13,12 @@
 - `devecocli run --device "Pura 90" --product default`: passed, app installed and launched.
 - `devecocli log --device "Pura 90" --bundle-name com.noahni.sudokuharmony --tail 80 --from 2m`: no startup crash found.
 - `hdc shell uitest dumpLayout` on `Pura 90`: passed, foreground timer text changed from `00:46` to `01:16`.
+- `hdc shell uinput -T -c 665 1180` plus `uitest dumpLayout`: passed, selected cell moved from `[336,779][466,909]` to `[595,1168][725,1298]`.
 - `/Users/noah/development/flutter/bin/flutter analyze`: passed, no issues found.
 - `/Users/noah/development/flutter/bin/flutter test`: passed, 6 tests passed.
 
 ## Notes
 
 - Runtime smoke test covered install, launch, and foreground timer progression on the `Pura 90` emulator.
+- Board grid validation covered runtime tap behavior after the grid-line overlay change.
 - Existing uncommitted signing files and local project changes were left untouched.

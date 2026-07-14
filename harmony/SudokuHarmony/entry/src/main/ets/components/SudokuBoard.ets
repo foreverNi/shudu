@@ -43,20 +43,17 @@ export struct SudokuBoard {
     return $r('app.color.bg_card')
   }
 
-  private rightBorderW(col: number): Length {
-    if (col === 2 || col === 5) { return '2vp' }
-    if (col === 8) { return 0 }
+  private gridLineW(index: number): Length {
+    if (index === 0 || index === 9) { return '1.2vp' }
+    if (index === 3 || index === 6) { return '2vp' }
     return '1vp'
   }
 
-  private bottomBorderW(row: number): Length {
-    if (row === 2 || row === 5) { return '2vp' }
-    if (row === 8) { return 0 }
-    return '1vp'
-  }
-
-  private borderC(row: number, col: number): ResourceColor {
-    if (row === 2 || row === 5 || col === 2 || col === 5) {
+  private gridLineColor(index: number): ResourceColor {
+    if (index === 0 || index === 9) {
+      return $r('app.color.board_border')
+    }
+    if (index === 3 || index === 6) {
       return $r('app.color.board_line_thick')
     }
     return $r('app.color.board_line_thin')
@@ -75,22 +72,69 @@ export struct SudokuBoard {
 
   build() {
     Column() {
-      Grid() {
-        ForEach(this.cells, (cell: SudokuCell, index: number) => {
-          GridItem() {
-            this.CellBuilder(index)
-          }
-        }, (cell: SudokuCell, index: number) => index.toString() + '_' + cell.value.toString() + '_' + cell.noteFlags.join(''))
+      Stack() {
+        Grid() {
+          ForEach(this.cells, (cell: SudokuCell, index: number) => {
+            GridItem() {
+              this.CellBuilder(index)
+            }
+          }, (cell: SudokuCell, index: number) => index.toString() + '_' + cell.value.toString() + '_' + cell.noteFlags.join(''))
+        }
+        .columnsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+        .rowsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+        .width('100%')
+        .height('100%')
+
+        this.GridLines()
       }
-      .columnsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
-      .rowsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
       .width('100%')
       .height('100%')
     }
     .backgroundColor('#FCFEFF')
     .borderRadius($r('app.float.board_border_radius'))
-    .border({ width: 1.2, color: $r('app.color.board_border'), radius: $r('app.float.board_border_radius') })
+    .clip(true)
     .shadow({ radius: 16, color: '#14396518', offsetY: 8 })
+  }
+
+  @Builder
+  GridLines() {
+    Stack() {
+      Row() {
+        ForEach([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], (index: number) => {
+          if (index > 0) {
+            Blank()
+              .layoutWeight(1)
+          }
+          Column()
+            .width(this.gridLineW(index))
+            .height('100%')
+            .backgroundColor(this.gridLineColor(index))
+        }, (index: number) => index.toString())
+      }
+      .width('100%')
+      .height('100%')
+      .enabled(false)
+
+      Column() {
+        ForEach([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], (index: number) => {
+          if (index > 0) {
+            Blank()
+              .layoutWeight(1)
+          }
+          Row()
+            .width('100%')
+            .height(this.gridLineW(index))
+            .backgroundColor(this.gridLineColor(index))
+        }, (index: number) => index.toString())
+      }
+      .width('100%')
+      .height('100%')
+      .enabled(false)
+    }
+    .width('100%')
+    .height('100%')
+    .enabled(false)
+    .hitTestBehavior(HitTestMode.None)
   }
 
   @Builder
@@ -128,14 +172,6 @@ export struct SudokuBoard {
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
     .backgroundColor(this.cellBg(index))
-    .border({
-      width: index === this.selectedIndex
-        ? { right: this.rightBorderW(index % 9), bottom: this.bottomBorderW(Math.floor(index / 9)), left: '1.2vp', top: '1.2vp' }
-        : { right: this.rightBorderW(index % 9), bottom: this.bottomBorderW(Math.floor(index / 9)) },
-      color: index === this.selectedIndex
-        ? { right: this.borderC(Math.floor(index / 9), index % 9), bottom: this.borderC(Math.floor(index / 9), index % 9), left: $r('app.color.cell_selected_border'), top: $r('app.color.cell_selected_border') }
-        : { right: this.borderC(Math.floor(index / 9), index % 9), bottom: this.borderC(Math.floor(index / 9), index % 9) }
-    })
     .onClick(() => {
       this.onCellTap(index)
     })
