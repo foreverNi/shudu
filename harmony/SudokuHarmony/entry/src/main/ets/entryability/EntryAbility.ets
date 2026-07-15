@@ -14,6 +14,9 @@
  */
 
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { gamePlayer } from '@kit.GameServiceKit';
+import { deviceInfo } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { HuaweiGameServiceState } from '../model/HuaweiGameServiceState';
@@ -35,7 +38,6 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    // Main window is created, set main page for this ability
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
     windowStage.loadContent('pages/Index', (err) => {
@@ -44,7 +46,22 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
-      HuaweiGameServiceState.initializeFromAbility(this.context);
+      if (deviceInfo.productModel === 'emulator') {
+        hilog.info(DOMAIN, 'testTag', 'Running on emulator, skip Game Service init.');
+        HuaweiGameServiceState.notifyInitialized();
+        return;
+      }
+      try {
+        gamePlayer.init(this.context, () => {
+          hilog.info(DOMAIN, 'testTag', 'Succeeded in initing Game Service.');
+          HuaweiGameServiceState.notifyInitialized();
+        });
+      } catch (error) {
+        let e = error as BusinessError;
+        hilog.error(DOMAIN, 'testTag', 'Failed to init Game Service. Code: %{public}d, message: %{public}s',
+          e.code, e.message);
+        HuaweiGameServiceState.notifyInitFailed(e);
+      }
     });
   }
 

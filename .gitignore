@@ -51,3 +51,12 @@ app.*.map.json
 # HarmonyOS local build and verification artifacts
 harmony/**/.cache/
 harmony/**/screenshots/
+
+# HarmonyOS signing and service configuration
+harmony/**/*.p12
+harmony/**/*.p7b
+harmony/**/*.csr
+harmony/**/*.cer
+harmony/**/agconnect-services.json
+harmony/**/resources/rawfile/agconnect-services.json
+harmony/**/material/

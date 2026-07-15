@@ -12,6 +12,7 @@ import { HuaweiGameServiceState } from '../model/HuaweiGameServiceState'
 import { common } from '@kit.AbilityKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { gamePlayer } from '@kit.GameServiceKit'
+import { deviceInfo } from '@kit.BasicServicesKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 
 const APP_VERSION: string = '1.0.5'
@@ -291,6 +292,12 @@ struct Index {
       return
     }
     this.gameServiceStarted = true
+    if (deviceInfo.productModel === 'emulator') {
+      this.gameServiceReady = true
+      this.gameServiceMessage = ''
+      this.startTimer()
+      return
+    }
     this.gameServiceReady = false
     this.gameServiceMessage = showLoginDialog ? '正在重新拉起华为账号登录...' : '正在进行华为账号合规校验...'
     this.loginAndVerifyHuaweiPlayer(showLoginDialog)

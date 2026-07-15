@@ -10,11 +10,11 @@
     },
     {
       "name": "EntryAbility_label",
-      "value": "数独"
+      "value": "纯粹数独"
     },
     {
       "name": "app_name",
-      "value": "数独"
+      "value": "纯粹数独"
     },
     {
       "name": "about_title",
@@ -26,7 +26,7 @@
     },
     {
       "name": "about_author",
-      "value": "作者：Noah.Ni"
+      "value": "作者：倪国瑜"
     },
     {
       "name": "close",
