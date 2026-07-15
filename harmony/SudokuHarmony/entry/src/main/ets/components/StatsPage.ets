@@ -1,4 +1,4 @@
-import { DifficultyStats, StatsSummary, averageSeconds, formatDuration, totalGames, totalSeconds } from '../model/StatsStore'
+import { DifficultyStats, StatsSummary, averageSeconds, formatDuration, totalGames } from '../model/StatsStore'
 
 @Component
 export struct StatsPage {
@@ -10,18 +10,9 @@ export struct StatsPage {
     return maxCount <= 0 ? 1 : maxCount
   }
 
-  private allAverageSeconds(): number {
-    const games = totalGames(this.summary)
-    if (games <= 0) {
-      return 0
-    }
-    return Math.round(totalSeconds(this.summary) / games)
-  }
-
   build() {
     Scroll() {
       Column({ space: 14 }) {
-        this.OverviewCard()
         this.DistributionCard()
         this.TimeCard()
       }
@@ -31,71 +22,6 @@ export struct StatsPage {
     .width('100%')
     .layoutWeight(1)
     .scrollBar(BarState.Off)
-  }
-
-  @Builder
-  OverviewCard() {
-    Row() {
-      this.MetricItem($r('app.media.icon_trophy'), totalGames(this.summary).toString(), '总局数')
-
-      Divider()
-        .vertical(true)
-        .height(48)
-        .color($r('app.color.divider'))
-
-      this.MetricItem($r('app.media.icon_clock'), formatDuration(this.allAverageSeconds()), '平均用时')
-
-      Divider()
-        .vertical(true)
-        .height(48)
-        .color($r('app.color.divider'))
-
-      this.MetricItem($r('app.media.icon_target'), this.completionRateLabel(), '完成率')
-    }
-    .width('100%')
-    .height(82)
-    .backgroundColor($r('app.color.bg_card'))
-    .borderRadius($r('app.float.card_border_radius'))
-    .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-    .justifyContent(FlexAlign.SpaceEvenly)
-    .alignItems(VerticalAlign.Center)
-    .shadow({ radius: 28, color: $r('app.color.card_shadow'), offsetY: 10 })
-  }
-
-  @Builder
-  MetricItem(iconRes: Resource, valueStr: string, labelStr: string) {
-    Row({ space: 10 }) {
-      Column() {
-        Image(iconRes)
-          .width(24)
-          .height(24)
-          .objectFit(ImageFit.Contain)
-      }
-      .width($r('app.float.icon_circle_size'))
-      .height($r('app.float.icon_circle_size'))
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
-      .borderRadius(14)
-      .backgroundColor($r('app.color.bg_icon_circle'))
-      .shadow({ radius: 18, color: $r('app.color.btn_shadow'), offsetY: 6 })
-
-      Column({ space: 4 }) {
-        Text(valueStr)
-          .fontSize(17)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-          .maxLines(1)
-
-        Text(labelStr)
-          .fontSize(11)
-          .fontWeight(FontWeight.Normal)
-          .fontColor($r('app.color.text_secondary'))
-      }
-      .alignItems(HorizontalAlign.Start)
-    }
-    .layoutWeight(1)
-    .justifyContent(FlexAlign.Center)
-    .alignItems(VerticalAlign.Center)
   }
 
   @Builder
@@ -269,10 +195,5 @@ export struct StatsPage {
     .backgroundColor(shaded ? '#F8FBFF' : Color.Transparent)
     .borderRadius(10)
     .alignItems(VerticalAlign.Center)
-  }
-
-  private completionRateLabel(): string {
-    const games = totalGames(this.summary)
-    return games > 0 ? '100%' : '0%'
   }
 }

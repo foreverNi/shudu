@@ -7,7 +7,8 @@ import { DifficultySheet } from '../components/DifficultySheet'
 import { BottomNav } from '../components/BottomNav'
 import { StatsPage } from '../components/StatsPage'
 import { AchievementsPage } from '../components/AchievementsPage'
-import { StatsStore, StatsSummary, emptyStatsSummary } from '../model/StatsStore'
+import { SummaryMetricItem } from '../components/SummaryCard'
+import { StatsStore, StatsSummary, emptyStatsSummary, formatDuration, totalGames, totalSeconds } from '../model/StatsStore'
 import { HuaweiGameServiceState } from '../model/HuaweiGameServiceState'
 import { common } from '@kit.AbilityKit'
 import { BusinessError } from '@kit.BasicServicesKit'
@@ -21,6 +22,7 @@ const MAX_HISTORY: number = 80
 const MAX_MISTAKES: number = 3
 const LOG_DOMAIN: number = 0x0000
 const LOG_TAG: string = 'SudokuGameService'
+const ACHIEVEMENT_TOTAL: number = 7
 
 @Entry
 @Component
@@ -287,6 +289,80 @@ struct Index {
     return this.hintUsageCount
   }
 
+  private statsAverageSeconds(): number {
+    const games = totalGames(this.statsSummary)
+    if (games <= 0) {
+      return 0
+    }
+    return Math.round(totalSeconds(this.statsSummary) / games)
+  }
+
+  private completionRateLabel(): string {
+    const games = totalGames(this.statsSummary)
+    return games > 0 ? '100%' : '0%'
+  }
+
+  private totalCount(): number {
+    return totalGames(this.statsSummary)
+  }
+
+  private hasMediumWin(): boolean {
+    return this.statsSummary.medium.count > 0
+  }
+
+  private hasHardWin(): boolean {
+    return this.statsSummary.hard.count > 0
+  }
+
+  private hasMediumFastWin(): boolean {
+    return this.statsSummary.medium.bestSeconds > 0 && this.statsSummary.medium.bestSeconds <= 600
+  }
+
+  private hasHardFastWin(): boolean {
+    return this.statsSummary.hard.bestSeconds > 0 && this.statsSummary.hard.bestSeconds <= 900
+  }
+
+  private unlockedCount(): number {
+    let count = 0
+    count += this.hasMediumWin() ? 1 : 0
+    count += this.hasHardWin() ? 1 : 0
+    count += this.hasMediumFastWin() ? 1 : 0
+    count += this.hasHardFastWin() ? 1 : 0
+    count += this.totalCount() >= 10 ? 1 : 0
+    count += this.totalCount() >= 20 ? 1 : 0
+    count += this.totalCount() >= 30 ? 1 : 0
+    return count
+  }
+
+  private unlockPercent(): number {
+    return Math.round(this.unlockedCount() / ACHIEVEMENT_TOTAL * 100)
+  }
+
+  private nextTargetLabel(): string {
+    if (!this.hasMediumWin()) {
+      return '首胜中等'
+    }
+    if (!this.hasHardWin()) {
+      return '首胜困难'
+    }
+    if (!this.hasMediumFastWin()) {
+      return '十分钟中等'
+    }
+    if (!this.hasHardFastWin()) {
+      return '十五分钟困难'
+    }
+    if (this.totalCount() < 10) {
+      return '完成10局'
+    }
+    if (this.totalCount() < 20) {
+      return '完成20局'
+    }
+    if (this.totalCount() < 30) {
+      return '完成30局'
+    }
+    return '全部达成'
+  }
+
   private startHuaweiGameService(showLoginDialog: boolean): void {
     if (this.gameServiceStarted && !showLoginDialog) {
       return
@@ -426,6 +502,7 @@ struct Index {
 
       Column() {
         this.HeaderBar()
+        this.TopSummary()
 
         if (this.activeTab === 0) {
           this.GameContent()
@@ -468,16 +545,8 @@ struct Index {
   GameContent() {
     Column() {
       Column() {
-        this.StatusCard()
-      }
-      .width(this.boardSize)
-      .alignItems(HorizontalAlign.Center)
-      .margin({ top: this.contentGap })
-
-      Column() {
         this.BoardArea()
       }
-      .margin({ top: this.contentGap })
 
       Column() {
         ActionToolbar({
@@ -521,7 +590,6 @@ struct Index {
     .width('100%')
     .layoutWeight(1)
     .alignItems(HorizontalAlign.Center)
-    .margin({ top: this.contentGap })
   }
 
   @Builder
@@ -535,7 +603,6 @@ struct Index {
     .width('100%')
     .layoutWeight(1)
     .alignItems(HorizontalAlign.Center)
-    .margin({ top: this.contentGap })
   }
 
   @Builder
@@ -592,41 +659,33 @@ struct Index {
     .height(this.HEADER_H)
     .padding({ left: 27, right: 30, top: 0 })
     .alignItems(VerticalAlign.Top)
+    .margin({ bottom: this.contentGap })
+  }
+
+  @Builder
+  TopSummary() {
+    Column() {
+      if (this.activeTab === 0) {
+        this.StatusCard()
+      } else if (this.activeTab === 1) {
+        this.StatsSummaryCard()
+      } else {
+        this.AchievementsSummaryCard()
+      }
+    }
+    .width(this.boardSize)
+    .alignItems(HorizontalAlign.Center)
+    .margin({ bottom: this.contentGap })
   }
 
   @Builder
   MetricItem(iconRes: Resource, valueStr: string, labelStr: ResourceStr, isError: boolean) {
-    Row({ space: 10 }) {
-      Column() {
-        Image(iconRes)
-          .width(24)
-          .height(24)
-          .objectFit(ImageFit.Contain)
-      }
-      .width($r('app.float.icon_circle_size'))
-      .height($r('app.float.icon_circle_size'))
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
-      .borderRadius(14)
-      .backgroundColor($r('app.color.bg_icon_circle'))
-      .shadow({ radius: 18, color: $r('app.color.btn_shadow'), offsetY: 6 })
-
-      Column({ space: 4 }) {
-        Text(valueStr)
-          .fontSize($r('app.float.metric_value_font_size'))
-          .fontWeight(FontWeight.Medium)
-          .fontColor(isError ? $r('app.color.error_red') : $r('app.color.text_primary'))
-
-        Text(labelStr)
-          .fontSize($r('app.float.metric_label_font_size'))
-          .fontWeight(FontWeight.Normal)
-          .fontColor($r('app.color.text_secondary'))
-      }
-      .alignItems(HorizontalAlign.Start)
-    }
-    .layoutWeight(1)
-    .justifyContent(FlexAlign.Center)
-    .alignItems(VerticalAlign.Center)
+    SummaryMetricItem({
+      iconRes: iconRes,
+      valueStr: valueStr,
+      labelStr: labelStr,
+      isError: isError
+    })
   }
 
   @Builder
@@ -689,6 +748,77 @@ struct Index {
         .color($r('app.color.divider'))
 
       this.MetricItem($r('app.media.icon_target'), this.mistakes.toString() + '/3', $r('app.string.mistakes'), this.mistakes > 0)
+    }
+    .width('100%')
+    .height($r('app.float.status_card_h'))
+    .backgroundColor($r('app.color.bg_card'))
+    .borderRadius($r('app.float.card_border_radius'))
+    .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+    .justifyContent(FlexAlign.SpaceEvenly)
+    .alignItems(VerticalAlign.Center)
+    .shadow({ radius: 28, color: $r('app.color.card_shadow'), offsetY: 10 })
+  }
+
+  @Builder
+  StatsSummaryCard() {
+    Row() {
+      this.MetricItem($r('app.media.icon_trophy'), totalGames(this.statsSummary).toString(), '总局数', false)
+
+      Divider()
+        .vertical(true)
+        .height(48)
+        .color($r('app.color.divider'))
+
+      this.MetricItem($r('app.media.icon_clock'), formatDuration(this.statsAverageSeconds()), '平均用时', false)
+
+      Divider()
+        .vertical(true)
+        .height(48)
+        .color($r('app.color.divider'))
+
+      this.MetricItem($r('app.media.icon_target'), this.completionRateLabel(), '完成率', false)
+    }
+    .width('100%')
+    .height($r('app.float.status_card_h'))
+    .backgroundColor($r('app.color.bg_card'))
+    .borderRadius($r('app.float.card_border_radius'))
+    .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+    .justifyContent(FlexAlign.SpaceEvenly)
+    .alignItems(VerticalAlign.Center)
+    .shadow({ radius: 28, color: $r('app.color.card_shadow'), offsetY: 10 })
+  }
+
+  @Builder
+  AchievementsSummaryCard() {
+    Row() {
+      SummaryMetricItem({
+        iconRes: $r('app.media.icon_trophy'),
+        valueStr: this.unlockedCount().toString() + ' / ' + ACHIEVEMENT_TOTAL.toString(),
+        labelStr: '已解锁成就'
+      })
+
+      Divider()
+        .vertical(true)
+        .height(48)
+        .color($r('app.color.divider'))
+
+      SummaryMetricItem({
+        iconRes: $r('app.media.icon_clock'),
+        valueStr: this.unlockPercent().toString() + '%',
+        labelStr: '解锁率',
+        isAccent: true
+      })
+
+      Divider()
+        .vertical(true)
+        .height(48)
+        .color($r('app.color.divider'))
+
+      SummaryMetricItem({
+        iconRes: $r('app.media.icon_target'),
+        valueStr: this.nextTargetLabel(),
+        labelStr: '下一目标'
+      })
     }
     .width('100%')
     .height($r('app.float.status_card_h'))

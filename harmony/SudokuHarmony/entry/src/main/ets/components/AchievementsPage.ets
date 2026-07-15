@@ -1,7 +1,5 @@
 import { StatsSummary, formatDuration, totalGames } from '../model/StatsStore'
 
-const ACHIEVEMENT_TOTAL: number = 7
-
 @Component
 export struct AchievementsPage {
   @Prop summary: StatsSummary = new StatsSummary()
@@ -27,47 +25,6 @@ export struct AchievementsPage {
     return this.summary.hard.bestSeconds > 0 && this.summary.hard.bestSeconds <= 900
   }
 
-  private unlockedCount(): number {
-    let count = 0
-    count += this.hasMediumWin() ? 1 : 0
-    count += this.hasHardWin() ? 1 : 0
-    count += this.hasMediumFastWin() ? 1 : 0
-    count += this.hasHardFastWin() ? 1 : 0
-    count += this.totalCount() >= 10 ? 1 : 0
-    count += this.totalCount() >= 20 ? 1 : 0
-    count += this.totalCount() >= 30 ? 1 : 0
-    return count
-  }
-
-  private unlockPercent(): number {
-    return Math.round(this.unlockedCount() / ACHIEVEMENT_TOTAL * 100)
-  }
-
-  private nextTargetLabel(): string {
-    if (!this.hasMediumWin()) {
-      return '首胜中等'
-    }
-    if (!this.hasHardWin()) {
-      return '首胜困难'
-    }
-    if (!this.hasMediumFastWin()) {
-      return '十分钟中等'
-    }
-    if (!this.hasHardFastWin()) {
-      return '十五分钟困难'
-    }
-    if (this.totalCount() < 10) {
-      return '完成10局'
-    }
-    if (this.totalCount() < 20) {
-      return '完成20局'
-    }
-    if (this.totalCount() < 30) {
-      return '完成30局'
-    }
-    return '全部达成'
-  }
-
   private clampedProgress(target: number): number {
     const progress = this.totalCount() / target * 100
     if (progress <= 0) {
@@ -82,7 +39,6 @@ export struct AchievementsPage {
   build() {
     Scroll() {
       Column({ space: 14 }) {
-        this.OverviewCard()
         this.KeyAchievementsCard()
         this.MilestoneCard()
       }
@@ -92,79 +48,6 @@ export struct AchievementsPage {
     .width('100%')
     .layoutWeight(1)
     .scrollBar(BarState.Off)
-  }
-
-  @Builder
-  OverviewCard() {
-    Row() {
-      Row({ space: 12 }) {
-        Column() {
-          Image($r('app.media.icon_trophy'))
-            .width(34)
-            .height(34)
-            .objectFit(ImageFit.Contain)
-        }
-        .width(44)
-        .height(44)
-        .justifyContent(FlexAlign.Center)
-        .alignItems(HorizontalAlign.Center)
-
-        Column({ space: 4 }) {
-          Text(this.unlockedCount().toString() + ' / ' + ACHIEVEMENT_TOTAL.toString())
-            .fontSize(22)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
-          Text('已解锁成就')
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
-        }
-        .alignItems(HorizontalAlign.Start)
-      }
-      .layoutWeight(1)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(VerticalAlign.Center)
-
-      Divider()
-        .vertical(true)
-        .height(58)
-        .color($r('app.color.divider'))
-
-      Row({ space: 12 }) {
-        Column() {
-          Text(this.unlockPercent().toString() + '%')
-            .fontSize(15)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.primary_blue'))
-        }
-        .width(48)
-        .height(48)
-        .justifyContent(FlexAlign.Center)
-        .alignItems(HorizontalAlign.Center)
-        .borderRadius(24)
-        .backgroundColor($r('app.color.bg_icon_circle'))
-
-        Column({ space: 5 }) {
-          Text('下一目标')
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
-          Text(this.nextTargetLabel())
-            .fontSize(14)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
-        }
-        .alignItems(HorizontalAlign.Start)
-      }
-      .layoutWeight(1)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(VerticalAlign.Center)
-    }
-    .width('100%')
-    .height(86)
-    .backgroundColor($r('app.color.bg_card'))
-    .borderRadius($r('app.float.card_border_radius'))
-    .padding({ left: 18, right: 18, top: 10, bottom: 10 })
-    .alignItems(VerticalAlign.Center)
-    .shadow({ radius: 28, color: $r('app.color.card_shadow'), offsetY: 10 })
   }
 
   @Builder
