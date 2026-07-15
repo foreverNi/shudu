@@ -16,7 +16,7 @@ import { gamePlayer } from '@kit.GameServiceKit'
 import { deviceInfo } from '@kit.BasicServicesKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 
-const APP_VERSION: string = '1.0.5'
+const APP_VERSION: string = '1.0.6'
 const APP_AUTHOR: string = '倪国瑜'
 const MAX_HISTORY: number = 80
 const MAX_MISTAKES: number = 3
