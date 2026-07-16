@@ -12,11 +12,108 @@ const SOLUTION: number[] = [
   3, 4, 5, 2, 8, 6, 1, 7, 9
 ]
 
-function buildPuzzle(givens: number[]): SudokuPuzzle {
+const ORDER_PERMUTATIONS: number[][] = [
+  [0, 1, 2],
+  [0, 2, 1],
+  [1, 0, 2],
+  [1, 2, 0],
+  [2, 0, 1],
+  [2, 1, 0]
+]
+
+const DIGIT_VARIANTS: number = 18
+const PUZZLE_VARIANTS: number = ORDER_PERMUTATIONS.length * ORDER_PERMUTATIONS.length *
+ORDER_PERMUTATIONS.length * ORDER_PERMUTATIONS.length * DIGIT_VARIANTS
+let lastEasyVariant: number = -1
+let lastMediumVariant: number = -1
+let lastHardVariant: number = -1
+
+function buildPuzzle(givens: number[], solution: number[] = SOLUTION): SudokuPuzzle {
   const p = new SudokuPuzzle()
   p.givens = givens
-  p.solution = SOLUTION
+  p.solution = solution
   return p
+}
+
+function lastVariantForDifficulty(d: SudokuDifficulty): number {
+  if (d === SudokuDifficulty.Easy) {
+    return lastEasyVariant
+  }
+  if (d === SudokuDifficulty.Medium) {
+    return lastMediumVariant
+  }
+  return lastHardVariant
+}
+
+function setLastVariantForDifficulty(d: SudokuDifficulty, variant: number): void {
+  if (d === SudokuDifficulty.Easy) {
+    lastEasyVariant = variant
+  } else if (d === SudokuDifficulty.Medium) {
+    lastMediumVariant = variant
+  } else {
+    lastHardVariant = variant
+  }
+}
+
+function randomVariant(d: SudokuDifficulty): number {
+  let variant: number = Math.floor(Math.random() * PUZZLE_VARIANTS)
+  const lastVariant: number = lastVariantForDifficulty(d)
+  if (variant === lastVariant) {
+    variant = (variant + 1) % PUZZLE_VARIANTS
+  }
+  setLastVariantForDifficulty(d, variant)
+  return variant
+}
+
+function expandOrder(majorPermutation: number[], innerPermutation: number[]): number[] {
+  const order: number[] = []
+  for (let majorIndex = 0; majorIndex < majorPermutation.length; majorIndex++) {
+    const major: number = majorPermutation[majorIndex]
+    for (let innerIndex = 0; innerIndex < innerPermutation.length; innerIndex++) {
+      order.push(major * 3 + innerPermutation[innerIndex])
+    }
+  }
+  return order
+}
+
+function remapDigit(value: number, shift: number, reversed: boolean): number {
+  if (value === 0) {
+    return 0
+  }
+  const shifted: number = ((value + shift - 1) % 9) + 1
+  return reversed ? 10 - shifted : shifted
+}
+
+function transformGrid(grid: number[], rowOrder: number[], columnOrder: number[],
+  digitShift: number, digitReversed: boolean): number[] {
+  const transformed: number[] = []
+  for (let row = 0; row < 9; row++) {
+    for (let column = 0; column < 9; column++) {
+      const sourceIndex: number = rowOrder[row] * 9 + columnOrder[column]
+      transformed.push(remapDigit(grid[sourceIndex], digitShift, digitReversed))
+    }
+  }
+  return transformed
+}
+
+function transformPuzzle(givens: number[], variant: number): SudokuPuzzle {
+  let seed: number = variant
+  const bandOrder: number[] = ORDER_PERMUTATIONS[seed % ORDER_PERMUTATIONS.length]
+  seed = Math.floor(seed / ORDER_PERMUTATIONS.length)
+  const stackOrder: number[] = ORDER_PERMUTATIONS[seed % ORDER_PERMUTATIONS.length]
+  seed = Math.floor(seed / ORDER_PERMUTATIONS.length)
+  const rowInnerOrder: number[] = ORDER_PERMUTATIONS[seed % ORDER_PERMUTATIONS.length]
+  seed = Math.floor(seed / ORDER_PERMUTATIONS.length)
+  const columnInnerOrder: number[] = ORDER_PERMUTATIONS[seed % ORDER_PERMUTATIONS.length]
+  seed = Math.floor(seed / ORDER_PERMUTATIONS.length)
+  const digitShift: number = seed % 9
+  const digitReversed: boolean = Math.floor(seed / 9) % 2 === 1
+  const rowOrder: number[] = expandOrder(bandOrder, rowInnerOrder)
+  const columnOrder: number[] = expandOrder(stackOrder, columnInnerOrder)
+  return buildPuzzle(
+    transformGrid(givens, rowOrder, columnOrder, digitShift, digitReversed),
+    transformGrid(SOLUTION, rowOrder, columnOrder, digitShift, digitReversed)
+  )
 }
 
 const EASY_GIVENS: number[] = [
@@ -56,13 +153,14 @@ const HARD_GIVENS: number[] = [
 ]
 
 export function getPuzzle(d: SudokuDifficulty): SudokuPuzzle {
+  const variant: number = randomVariant(d)
   if (d === SudokuDifficulty.Easy) {
-    return buildPuzzle(EASY_GIVENS)
+    return transformPuzzle(EASY_GIVENS, variant)
   }
   if (d === SudokuDifficulty.Medium) {
-    return buildPuzzle(MEDIUM_GIVENS)
+    return transformPuzzle(MEDIUM_GIVENS, variant)
   }
-  return buildPuzzle(HARD_GIVENS)
+  return transformPuzzle(HARD_GIVENS, variant)
 }
 
 export function getSolution(): number[] {
