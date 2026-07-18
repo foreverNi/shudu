@@ -232,9 +232,10 @@ struct Index {
     this.solved = true
     this.stopTimer()
     const diffLabel: string = difficultyLabel(this.difficulty)
-    const timeStr: string = this.timeLabel
+    const elapsedSeconds: number = this.elapsedSeconds()
+    const timeStr: string = this.formatElapsedTime(elapsedSeconds)
     const mistakesStr: string = this.mistakes.toString()
-    this.statsSummary = this.statsStore.recordGame(this.difficulty, this.seconds)
+    this.statsSummary = this.statsStore.recordGame(this.difficulty, elapsedSeconds)
     this.getUIContext().showAlertDialog({
       title: '恭喜完成',
       message: '你已正确完成' + diffLabel + '数独。\n用时 ' + timeStr + '，错误 ' + mistakesStr + '/3。',
@@ -264,8 +265,21 @@ struct Index {
   }
 
   private get timeLabel(): string {
-    const minutes: string = Math.floor(this.seconds / 60).toString().padStart(2, '0')
-    const secs: string = (this.seconds % 60).toString().padStart(2, '0')
+    return this.formatElapsedTime(this.elapsedSeconds())
+  }
+
+  private elapsedSeconds(): number {
+    const seconds: number = Math.floor(this.seconds || 0)
+    if (seconds <= 0) {
+      return 0
+    }
+    return seconds
+  }
+
+  private formatElapsedTime(seconds: number): string {
+    const safeSeconds: number = Math.max(0, Math.floor(seconds || 0))
+    const minutes: string = Math.floor(safeSeconds / 60).toString().padStart(2, '0')
+    const secs: string = (safeSeconds % 60).toString().padStart(2, '0')
     return minutes + ':' + secs
   }
 
@@ -712,7 +726,7 @@ struct Index {
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.text_primary'))
           .onTimer((_utc: number, elapsedTime: number) => {
-            this.seconds = Math.floor(elapsedTime)
+            this.seconds = Math.max(0, Math.floor(elapsedTime || 0))
           })
           .onAppear(() => {
             this.startTimer()
