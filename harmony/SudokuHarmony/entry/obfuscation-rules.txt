@@ -21,3 +21,13 @@
 -enable-toplevel-obfuscation
 -enable-filename-obfuscation
 -enable-export-obfuscation
+
+# Keep persisted statistics JSON keys stable across obfuscated release builds.
+-keep-property-name
+easy
+medium
+hard
+count
+totalSeconds
+bestSeconds
+worstSeconds
